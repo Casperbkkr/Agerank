@@ -1,10 +1,9 @@
-from Classes import age_group_class, person, group_class, household_class, age_group_class
+from Classes import age_group_class
+from Datasets import filenames_dictionary
 
 import numpy as np
 import pandas as pd
 import math
-import random as rd
-import sys
 
 
 
@@ -19,7 +18,6 @@ def read_age_distribution(age_dist_file, csv_or_txt="txt"):
     """
 
     # Read in population per year of the Netherlands on January 1, 2020
-    # Source: CBS, Statistics Netherlands, https://opendata.cbs.nl
     if csv_or_txt == "txt":
         # print('\n**** Population of the Netherlands on Jan. 1, 2020. Source: CBS\n')
         population = pd.read_csv(age_dist_file, sep=" ", header=None)
@@ -84,13 +82,9 @@ def make_age_groups(dataframe, inp, number_of_ages):
     return out
 
 
-def read_contact_data(dataframe, file1, file2, PERIOD):
+def read_contact_data(dataframe, participants_file, contacts_file, PERIOD):
     """This function reads the participants and contacts per age group
     from the POLYMOD project.
-
-    Source: J. Mossong et al., "Social Contacts and Mixing Patterns Relevant
-    to the Spread of Infectious Diseases", PLOS Medicine (2008),
-    https://doi.org/10.1371/journal.pmed.0050074
 
     Choices made for inclusion:
     - only participants in NL, who keep a diary
@@ -105,14 +99,13 @@ def read_contact_data(dataframe, file1, file2, PERIOD):
     ngroups = dataframe["Age group class object"].nunique()
 
     groepen = dataframe["Age group class object"].tolist()
-    #group = list(dict.fromkeys(groepen))
 
     # print('\n**** Data from the POLYMOD contact study from 2008.')
     # print('Source: J. Mossong et al.\n')
 
     # determine ages of participants
     participants = np.zeros(nages, dtype=int)
-    with open(file1, 'r') as infile:
+    with open(participants_file, 'r') as infile:
         for line in infile:
             data = line.split()
             k = int(data[3])  # age of participant
@@ -129,8 +122,7 @@ def read_contact_data(dataframe, file1, file2, PERIOD):
 
     # create contact matrix C based on a period of 30 days
     contacts = np.zeros((nages, nages), dtype=int)
-    frequency = np.zeros((6), dtype=int)  # todo wat doet dit?
-    with open(file2, 'r') as infile:
+    with open(contacts_file, 'r') as infile:
         for line in infile:
             data = line.split()
             age_i = int(data[0])  # age of participant
@@ -177,7 +169,7 @@ def read_contact_data(dataframe, file1, file2, PERIOD):
 def determine_age_distribution(parameters, dataframe):
     '''
     determine age distribution for persons in network to be created
-    :param N: Number of people to be modelled in teh population
+    :param N: Number of people to be modelled in the population
     :param population: population[k] = number of persons of age k
     :return:
     This function returns a list with the amount of people of a certain age in the network.
@@ -209,8 +201,8 @@ def read_makeup_households(file):
     return makeup_data.iloc[[4]].reset_index(drop=True)
 
 
-def read_child_distribution(data):
-    child_data = pd.read_csv(data)
+def read_child_distribution(file):
+    child_data = pd.read_csv(file)
     child_data["Tweeouderhuishoudens"] = child_data["Tweeouderhuishoudens gehuwd"] + child_data["Tweeouderhuishoudens ongehuwd"]
     child_data = child_data.drop(["Tweeouderhuishoudens gehuwd", "Tweeouderhuishoudens ongehuwd"], axis=1)
     child_data = child_data.rename(index={0: 1, 1: 2, 2: 3})

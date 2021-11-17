@@ -1,155 +1,46 @@
 import pandas as pd
+import numpy as np
+import os
+from Datasets import filenames_dictionary
+from Model import model
 
-from Model import *
-from Classes import track_statistics
 from Parameters import parameter
 
-from bokeh.plotting import figure, output_file, show, ColumnDataSource
-from bokeh.models import HoverTool
-from bokeh.layouts import row
+# timesteps to simulate the model for
+timesteps = 10
+# the amout of times the same model has to be ran
+k = 10
+# the type of order for the vaccination
+vaccination_orders = [1, 2, 3, 4]
+# the names for the datasets to be saved
+file_names = {1: "Old_young", 2: "Young_old", 3: "Danish", 4: "Custom"}
 
+# load the parameters to be used in the model. Can be changed in the parameters.py file.
+parameters = parameter()
+# load the filenames of the datasets to be used
+filenames = filenames_dictionary()
 
-timesteps = 400
-results1 = pd.DataFrame(0, index=np.arange(timesteps), columns=["susceptible",
-                                          "total infected",
-                                          "currently infected",
-                                          "symptomatic",
-                                          "quarantined",
-                                          "hospitalized",
-                                          "recovered",
-                                          "vaccinated",
-                                          "transmitter",
-                                          "deceased"])
+for vacc_order in vaccination_orders:
+    results = model(parameters, filenames, vacc_order, timesteps)
+    file_name1 = str(file_names[vacc_order]) + "_" + str(0) + ".csv"
+    file_name_2 = os.path.join("Results", file_name1)
+    results.data.to_csv(file_name_2)
+    print("Saved as:", file_name1)
+    results_total = results.data
 
-parameter = parameter()
+    for i in range(1, k):
+        results = model(parameters, filenames, vacc_order, timesteps)
 
-k = 30
-for i in range(k):
-    tracker = track_statistics()
+        file_name1 = str(file_names[vacc_order]) + "_" + str(i) + ".csv"
+        file_name_2 = os.path.join("Results", file_name1)
+        results.data.to_csv(file_name_2)
+        print("Saved as:", file_name1)
+        results_total = results_total + results.data
 
-    tracker_changes = tracker.init_empty_changes()
-    print("Initializing model", i)
-    data, people, households, contact_matrix, tracker_changes, people_dict = initialize_model(parameter, 1, tracker_changes)
-    tracker.update_statistics(tracker_changes)
+    results_total = results_total / k
+    tracker = results_total.astype(int)
+    file_name_total1 = str(file_names[vacc_order]) + "_total.csv"
+    file_name_total_2 = os.path.join("Results", file_name_total_1)
+    results.data.to_csv(file_name_total_2)
 
-    print("Running model", i)
-    tracker = run_model_standard(parameter, data, people, households, contact_matrix, tracker, timesteps - 1)
-    print("Finished", i)
-    results1 = results1 + tracker.data
-    results1.to_csv('results_temp.csv')
-    print(i, k)
-
-results2 = results1/k
-tracker = results2.astype(int)
-tracker.to_csv('results.csv')
-
-source = ColumnDataSource(data={'time': [t for t in range(timesteps)],
-                                'infected': tracker['currently infected'],
-                                'deceased': tracker['deceased'],
-                                'recovered': tracker['recovered'],
-                                'transmitter': tracker['transmitter'],
-                                'symptomatic': tracker['symptomatic'],
-                                'hospitalized': tracker['hospitalized'],
-                                'vaccinated': tracker['vaccinated'],
-                                'total_infected': tracker['total infected']
-                                }
-                          )
-p1 = figure(
-    title="Title",
-    x_axis_label='days',
-    y_axis_label='people',
-    tools='reset,save,pan,wheel_zoom,box_zoom,xzoom_in,xzoom_out')
-
-# add a line renderer with source
-p1.line(
-    x='time',
-    y='infected',
-    legend_label='infected',
-    line_width=1,
-    line_color="red",
-    source=source)
-
-p1.line(
-    x='time',
-    y='hospitalized',
-    legend_label='hospitalized',
-    line_width=1,
-    line_color="purple",
-    source=source)
-
-p1.line(
-    x='time',
-    y='transmitter',
-    legend_label='transmitter',
-    line_width=1,
-    line_color="orange",
-    source=source)
-
-p1.line(
-    x='time',
-    y='symptomatic',
-    legend_label='symptomatic',
-    line_width=1,
-    line_color="green",
-    source=source)
-
-p1.add_tools(
-    HoverTool(
-        tooltips=[('time', '@time'),
-                  ('infected', '@infected'),
-                  ('transmitter', '@transmitter'),
-                  ('symptomatic', '@symptomatic'),
-                  ('hospitalized', '@hospitalized'),
-                  ('vaccinated', '@vaccinated')]))
-
-p1.legend.orientation = "horizontal"
-
-p2 = figure(
-    title="recovered",
-    x_axis_label='days',
-    y_axis_label='people',
-    tools='reset,save,pan,wheel_zoom,box_zoom,xzoom_in,xzoom_out')
-
-p2.line(
-    x='time',
-    y='total_infected',
-    legend_label='total infected',
-    line_width=1,
-    line_color="red",
-    source=source)
-
-p2.line(
-    x='time',
-    y='recovered',
-    legend_label='recovered',
-    line_width=1,
-    line_color="green",
-    source=source)
-
-p2.line(
-    x='time',
-    y='vaccinated',
-    legend_label='vaccinated',
-    line_width=1,
-    line_color="blue",
-    source=source)
-
-p2.line(
-    x='time',
-    y='deceased',
-    legend_label='deceased',
-    line_width=1,
-    line_color="orange",
-    source=source)
-
-p2.add_tools(
-    HoverTool(
-        tooltips=[('time', '@time'),
-                  ('recovered', '@recovered'),
-                  ('total infected', '@total_infected'),
-                  ('deceased', '@deceased')]))
-
-p2.legend.orientation = "horizontal"
-# show the results
-show(row(p1, p2))
-
+    print("Saved as:", file_name_total_1)

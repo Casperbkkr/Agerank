@@ -1,6 +1,3 @@
-import numpy as np
-import pandas as pd
-import math
 import random as rd
 import sys
 
@@ -17,8 +14,9 @@ def initialise_infection(parameters, people, tracker_changes):
     """
 
     # infect a fraction P0 of the population
+    # todo dit kan sneller door willekeurig N*P0 elements uit range(0,N) te kiezen zonder terugleggen
     for person in people:
-        if rd.random() < P0:
+        if rd.random() < parameters["P0"]:
             person.update_status(INFECTIOUS)
             tracker_changes["currently infected"] += 1
             tracker_changes["total infected"] += 1
@@ -29,71 +27,85 @@ def initialise_infection(parameters, people, tracker_changes):
     return tracker_changes
 
 
-def initialise_vaccination(parameters, people, tracker_changes):
+def initialise_vaccination(parameters, order, tracker_changes):
     # Initializes a fraction of to population with a vaccination
+    new_status_changes = tracker_changes
 
     # vacinate a fraction VACC0 of the population
-    max_young1 = math.floor(parameters["BETA0"] * parameters["VACC0"] * N)
-    max_young = min(max_young1, parameters["N"] - 1)  # just a precaution
-    min_old1 = math.floor(parameters["N"] - (1 - parameters["BETA0"]) * parameters["VACC0"] * parameters["N"])
+    min_old1 = math.floor((1 - parameters["BETA0"]) * parameters["VACC0"] * parameters["N"])
     min_old = max(min_old1, 0)
 
-    new_vaccinations = 0
-    # todo find out why this starts at age 0 with vaccinating
-    for i in range(max_young + 1):  # todo is this oversimplified?
-        if people[i].status == parameters["SUSCEPTIBLE"]:
-            tracker_changes["susceptible"] += -1
-        if people[i].status == parameters["INFECTIOUS"]:
-            tracker_changes["currently infected"] += -1
-            tracker_changes['total infected'] += -1
-        people[i].update_status(parameters["VACCINATED"])
-        tracker_changes["vaccinated"] += 1
+    for i in range(min(min_old, len(order))):
+        person = order.pop(0)
+        if person.status == SUSCEPTIBLE:
+            if person.vaccination_readiness == True:
+                person.update_status(VACCINATED)
+                new_status_changes["susceptible"] += -1
+                new_status_changes["vaccinated"] += 1
 
-    # todo hier gaat iets mis
-    for i in range(min_old, parameters["N"] - 1):
-        if people[i].status == parameters["SUSCEPTIBLE"]:
-            tracker_changes["susceptible"] += -1
-        if people[i].status == parameters["INFECTIOUS"]:
-            tracker_changes["currently infected"] += -1
-            tracker_changes['total infected'] += -1
-        people[i].update_status(parameters["VACCINATED"])
-        tracker_changes["vaccinated"] += 1
-
-    return tracker_changes
+    return new_status_changes, order
 
 
-def initialize_model(parameters, files, tracker_changes):
+def vaccination_o(people, age_groups, type, start_age):
+    # This is a function that creates a list of people to vaccinate to follow in the model
+    if type == 1:  # Old to yound
+        people = people[age_groups.iloc[start_age]:]
+        people.reverse()
+        order = people
+    if type == 2:  # Young to old
+        order = people[age_groups.iloc[start_age]:]
+    if type == 3:  # Danish way
+        tail = people[age_groups.iloc[start_age]:age_groups.iloc[50]]
+        start = people[age_groups.iloc[50]:]
+        start.reverse()
+        order = start + tail
+    if type == 4:  # custom
+        one = people[age_groups.iloc[40]:age_groups.iloc[60]]
+        two = people[age_groups.iloc[60]:]
+        two.reverse()
+        three = people[age_groups.iloc[start_age]:age_groups.iloc[40]]
+        order = one + two + three
+    return order
+
+
+def initialize_model(parameters, files, order_type, tracker_changes):
+    # This initializes everything for the model to run
+
     # Read age distribution and add to dataframe
-    print("Reading age distribution from: " + 'CBS_NL_population_20200101.txt')
-    data = read_age_distribution('CBS_NL_population_20200101.txt')
+    print("Reading age distribution from: " + files['Population_dataset'])
+    data = read_age_distribution(files["Population_dataset"])
 
     # Add fatality rate to dataframe
-    print("Reading infection fatality rates from: " + 'fatality_rates_Levin2020.txt')
-    data["IFR"] = read_fatality_distribution('fatality_rates_Levin2020.txt', len(data.index))
+    print("Reading infection fatality rates from: " + files["Fatality_distribution_dataset"])
+    data["IFR"] = read_fatality_distribution(files["Fatality_distribution_dataset"], len(data.index))
 
     # Add corresponding age groups to dataframe
     # These age groups are all ages in the range(start_group[i],start_group[i+1])
-    start_group = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]
+    start_group = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]  # todo put this in parameters
     print("Creating age group class objects.")
     data["Age group class object"] = make_age_groups(data, start_group, len(data.index))
 
     # Determine how many people of each age there are
-    print("Determening age distribution for population of " + str(parameters["N"]) + "people.")
+    print("Determining age distribution for population of " + str(parameters["N"]) + "people.")
     data["Start of age group"] = determine_age_distribution(parameters, data)
 
     # Read the file containing data about contacts longer then 15 minutes
     print("Creating age group contact distribution.")
-    contact_data = read_contact_data(data, 'participants_polymod_NL.txt', 'contacts_polymod_NL.txt',
+    contact_data = read_contact_data(data, files["Polymod_participants_dataset"], files["Polymod_contacts_dataset"],
                                      parameters["PERIOD"])
 
     # Create people
     print("Creating people.")
-    people, people_age_dict = create_people(parameters["N"], data, 0.85)
+    people, people_age_dict = create_people(parameters["N"], data, parameters["Vacc_readiness"])
 
+    # determine vaccination order
+    print("Determining vaccination order")
+    vaccination_order = vaccination_o(people, data["Start of age group"], order_type, parameters["STARTAGE"])
 
+    # create households
     print("Creating households")
-    household_dict = make_households(parameters["N"], "a", "Huishoudens__samenstelling__regio_11102021_154809.csv",
-                                     "Personen_in_huishoudens_naar_leeftijd_en_geslacht.csv", people_age_dict)
+    household_dict = make_households(parameters["N"], "a", files["Household_makeup_dataset"],
+                                     files["People_in_household_dataset"], people_age_dict)
 
     # Create contact network
     print("Generating network.")
@@ -102,13 +114,16 @@ def initialize_model(parameters, files, tracker_changes):
     # Initialize infection
     tracker_changes = initialise_infection(parameters, people, tracker_changes)
 
-    # Initialize vaccination if necessary
-    tracker_changes = initialise_vaccination(parameters, people, tracker_changes)
+    # Initialize vaccination
+    tracker_changes, vaccination_order = initialise_vaccination(parameters, vaccination_order, tracker_changes)
 
-    return data, people, household_dict, contact_matrix, tracker_changes, people_age_dict
+    return data, people, household_dict, contact_matrix, vaccination_order, tracker_changes, people_age_dict
 
 
 def infect_cohabitants(parameters, people, house_dict, tracker_changes):
+    # Method of infection for people in the same house.
+    # todo needs to made faster with a sparse matrix instead of looking up everyones household. Also for further work.
+
     infected = []
 
     for j in people:
@@ -117,7 +132,6 @@ def infect_cohabitants(parameters, people, house_dict, tracker_changes):
                 infected.append(j)
             elif j.status == parameters["TRANSMITTER"] and rd.random() < parameters["P_TRANSMIT0"]:
                 infected.append(j)
-
 
     for j in infected:
         members = j.household.members
@@ -132,12 +146,41 @@ def infect_cohabitants(parameters, people, house_dict, tracker_changes):
                 elif j.status == parameters["VACCINATED"]:
                     if rd.random() < parameters["P_TRANSMIT1"]:
                         j.update_status(parameters["TRANSMITTER"])
-                        # todo hier is ook nog een probleempje
                         tracker_changes['currently infected'] += 1
                         tracker_changes['total infected'] += 1
                         tracker_changes["transmitter"] += 1
-                        tracker_changes["vaccinated"] += -1
                         person.update_days_since_infection(1)
+
+    return tracker_changes
+
+
+def infect_perturbation(parameters, people, tracker_changes):
+    # this infects a fraction of the poplulation proportional to the the amount of infections
+    n = len(people)
+    x = np.zeros((n + 1), dtype=int)
+
+    for person in people:
+        if person.status == parameters["INFECTIOUS"] or person.status == parameters["SYMPTOMATIC"]:
+            x[person.person_id] = 1
+        elif person.status == parameters["TRANSMITTER"] and rd.random() < parameters["P_TRANSMIT0"]:
+            x[person.person_id] = 1
+
+    total_infected = sum(x)
+    prob = 1 - (1 - parameters["P_ENCOUNTER"] * (total_infected / (parameters["N"] - 1))) ** (parameters["ENCOUNTERS"])
+    to_infect = [i for i in range(n) if rd.random() < prob]
+    for id in to_infect:
+        person = people[id]
+        if person.status == parameters["SUSCEPTIBLE"]:
+            person.update_status(parameters["INFECTIOUS"])
+            tracker_changes["currently infected"] += 1
+            tracker_changes["total infected"] += 1
+            tracker_changes["susceptible"] += -1
+        elif person.status == parameters["VACCINATED"]:
+            person.update_status(parameters["TRANSMITTER"])
+            tracker_changes['currently infected'] += 1
+            tracker_changes['total infected'] += 1
+            tracker_changes["transmitter"] += 1
+            person.update_days_since_infection(1)
 
     return tracker_changes
 
@@ -160,29 +203,7 @@ def infect_standard(parameters, network, people, tracker_changes):
         elif person.status == parameters["TRANSMITTER"] and rd.random() < parameters["P_TRANSMIT0"]:
             x[person.person_id] = 1
 
-    total_infected = sum(x)
-    prob = total_infected/(100*n)
-    to_infect = [i for i in range(n) if rd.random() < prob]
-    tre = 1
-    for id in to_infect:
-        person = people[id]
-        if person.status == parameters["SUSCEPTIBLE"]:
-            person.update_status(parameters["INFECTIOUS"])
-            tracker_changes["currently infected"] += 1
-            tracker_changes["total infected"] += 1
-            tracker_changes["susceptible"] += -1
-        elif person.status == parameters["VACCINATED"]:
-            if rd.random() < parameters["P_TRANSMIT1"]:
-                person.update_status(parameters["TRANSMITTER"])
-                # todo hier is ook nog een probleempje
-                tracker_changes['currently infected'] += 1
-                tracker_changes['total infected'] += 1
-                tracker_changes["transmitter"] += 1
-                tracker_changes["vaccinated"] += -1
-                person.update_days_since_infection(1)
-
     # propagate the infections
-    # todo faster with dictionary
     for edge in network:
         i, j = edge
         y[i] += x[j]
@@ -206,11 +227,10 @@ def infect_standard(parameters, network, people, tracker_changes):
                 elif person.status == parameters["VACCINATED"]:
                     if rd.random() < parameters["P_TRANSMIT1"]:
                         person.update_status(parameters["TRANSMITTER"])
-                        # todo hier is ook nog een probleempje
                         tracker_changes['currently infected'] += 1
                         tracker_changes['total infected'] += 1
                         tracker_changes["transmitter"] += 1
-                        tracker_changes["vaccinated"] += -1
+                        # tracker_changes["vaccinated"] += -1
                         person.update_days_since_infection(1)
 
     return tracker_changes
@@ -274,65 +294,40 @@ def update(fatality, people, status_changes):
             person.update_status(VACCINATED)
             new_status_changes["transmitter"] += -1
             new_status_changes["currently infected"] += -1
-            new_status_changes["vaccinated"] += 1
+            # new_status_changes["vaccinated"] += 1
 
     return new_status_changes
 
 
-def vaccinate(people, status_changes, order=0):
+def vaccinate(people, status_changes, order):
     """This function performs one time step (day) of the vaccinations.
     status represents the health status of the persons.
     Only the susceptible or recovered (after a number of days) are vaccinated
     """
-    # todo make this exclusive and thereby faster
+
     new_status_changes = status_changes
     n = len(people)
 
-    vacc_young = math.floor(BETA * VACC * n)  # today's number of vaccines for the young
-    vacc_old = math.floor((1 - BETA) * VACC * n)  # and for the old
-
-    # vaccinate the young, starting from the youngest
-    count = 0
-    for person in people:
+    # today's number of vaccines
+    vacc = math.floor((1 - BETA) * VACC * n)  # and for the old
+    for i in range(min(vacc, len(order))):
+        person = order.pop(0)
         if person.status == SUSCEPTIBLE:
-            if count < vacc_young and person.age >= STARTAGE:
+            if person.vaccination_readiness == True:
                 person.update_status(VACCINATED)
                 new_status_changes["susceptible"] += -1
                 new_status_changes["vaccinated"] += 1
-                count += 1
 
         if person.status == RECOVERED and person.days_since_infection >= DAY_RECOVERY + NDAYS_VACC:
-            if count < vacc_young and person.age >= STARTAGE:
-                person.update_status(VACCINATED)
-                new_status_changes["recovered"] += -1
-                new_status_changes["vaccinated"] += 1
-                count += 1
+            person.update_status(VACCINATED)
+            new_status_changes["vaccinated"] += 1
 
-    # vaccinate the old, starting from the oldest
-    count = 0
-    reverse_people = people
-    reverse_people.reverse()
-    for person in reverse_people:
-        if person.status == SUSCEPTIBLE:
-            if person.vaccination_readiness == True:
-                if count < vacc_old and person.age >= STARTAGE:
-                    person.update_status(VACCINATED)
-                    new_status_changes["susceptible"] += -1
-                    new_status_changes["vaccinated"] += 1
-                    count += 1
-
-        if person.status == RECOVERED and person.days_since_infection >= DAY_RECOVERY + NDAYS_VACC:
-            if count < vacc_old and person.age >= STARTAGE:
-                person.update_status(VACCINATED)
-                new_status_changes["recovered"] += -1
-                new_status_changes["vaccinated"] += 1
-                count += 1
-
-    return new_status_changes
+    return new_status_changes, order
 
 
-def run_model_household(parameters, data, people, households, contact_matrix, tracker, timesteps=100, start_vaccination=0):
-    # Function for running the model. It wraps the vaccinate, infect and update functions
+def run_model_household(parameters, data, people, households, contact_matrix, order, tracker, timesteps,
+                        start_vaccination=0):
+    # Function for running the model. It wraps the vaccinate, infection and update functions
     for time in range(timesteps):
         sys.stdout.write('\r' + "Tijdstap: " + str(time))
         sys.stdout.flush()
@@ -340,38 +335,37 @@ def run_model_household(parameters, data, people, households, contact_matrix, tr
         if time < start_vaccination:
             status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
             status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_1)
-            status_changes_3 = update(data['IFR'], people, status_changes_2)
+            status_changes_3 = infect_perturbation(parameters, people, status_changes_2)
+            status_changes_4 = update(data['IFR'], people, status_changes_3)
 
-            tracker.update_statistics(status_changes_3)
+            tracker.update_statistics(status_changes_4)
         else:
             status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
             status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_1)
-            status_changes_3 = update(data['IFR'], people, status_changes_2)
-            status_changes_4 = vaccinate(people, status_changes_3)
+            status_changes_3 = infect_perturbation(parameters, people, status_changes_2)
+            status_changes_4 = update(data['IFR'], people, status_changes_3)
+            status_changes_5, order = vaccinate(people, status_changes_4, order)
 
-            tracker.update_statistics(status_changes_4)
+            tracker.update_statistics(status_changes_5)
 
     return tracker
 
 
-def run_model_standard(parameters, data, people, households, contact_matrix, tracker, timesteps=100, start_vaccination=0):
-    # Function for running the model. It wraps the vaccinate, infect and update functions
-    for time in range(timesteps):
-        sys.stdout.write('\r' + "Tijdstap: " + str(time))
-        sys.stdout.flush()
-        status_changes_0 = tracker.empty_changes()
-        if time < start_vaccination:
-            #status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
-            status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_0)
-            status_changes_3 = update(data['IFR'], people, status_changes_2)
+def model(parameters, filenames, type, timesteps=300):
+    # this initializes and runs the entire model for a certain number of timesteps.
+    # It returns a pandas dataframe containing all data at time t
+    tracker = track_statistics()
 
-            tracker.update_statistics(status_changes_3)
-        else:
-            #status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
-            status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_0)
-            status_changes_3 = update(data['IFR'], people, status_changes_2)
-            status_changes_4 = vaccinate(people, status_changes_3)
+    tracker_changes = tracker.init_empty_changes()
+    data, people, households, contact_matrix, order, tracker_changes, people_dict = initialize_model(parameters,
+                                                                                                     filenames,
+                                                                                                     type,
+                                                                                                     tracker_changes)
+    # update the dataframe
+    tracker.update_statistics(tracker_changes)
 
-            tracker.update_statistics(status_changes_4)
+    # Run the model
+    tracker = run_model_household(parameters, data, people, households, contact_matrix, order, tracker, timesteps - 1,
+                                  0)
 
     return tracker

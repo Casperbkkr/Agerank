@@ -1,8 +1,6 @@
-import numpy as np
 import pandas as pd
-import math
-import random as rd
-import sys
+
+
 
 # Main input parameters of the simulation, you may want to vary these.
 N = 10000  # number of persons in the network,
@@ -87,7 +85,6 @@ TRANSMITTER = 7  # infectious after being vaccinated or having recovered
 DECEASED = 8  # must be the highest numbered status
 
 class track_statistics(object):
-    # todo make dataframe
     def __init__(self, tracker_id=1):
         self.tracker_id = tracker_id
         self.data = pd.DataFrame(columns=["susceptible",

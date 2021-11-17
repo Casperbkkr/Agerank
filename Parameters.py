@@ -1,16 +1,20 @@
 # Main input parameters of the simulation, you may want to vary these.
-N = 100000  # number of persons in the network,
+N = 10000  # 358974 # number of persons in the network,
 # a trade-off between accuracy and speed
 BETA = 0.0  # fraction of young among the daily vaccinated persons
 NDAYS = 90  # number of days of the simulation
 
 # For the following parameters choose sensible values, as realistic as possible.
+ENCOUNTERS = 10
+P_ENCOUNTER = 0.0005
 
+# Willingness to take the vaccine if offered
+Vacc_readiness = 0.85
 # Probability parameters (0 <= P <= 1 must hold)
 P0 = 0.003  # probability of infection at time 0
 P_MEETING = 0.004  # probability of meeting a contact on a given day
 # and becoming infected.
-# A base value in a nonlockdown situation would be 0.02,
+# A base value in a non lockdown situation would be 0.02,
 # assuming that 10% of daily meetings results in an infection
 # and that the same person is met on average 6 times per month.
 # For the lockdown situation, this number has been reduced.
@@ -25,8 +29,7 @@ P_TRANSMIT0 = 0.2  # probability of becoming a transmitter of the disease
 # when meeting an infected person, see the CDC brief
 # https://www.cdc.gov/coronavirus/2019-ncov/science/science-briefs/fully-vaccinated-people.html
 
-P_COHAB = 0.2 #todo add source
-
+P_COHAB = 0.2  # todo add source
 
 P_TRANSMIT1 = 0.25  # probability of getting infected by a transmitter
 # when meeting him/her, see Levine-Tiefenbrun  et al.,
@@ -52,7 +55,7 @@ VACC0 = 0.155  # fraction of vaccination at time 0
 BETA0 = 0.0  # fraction of young among the vaccinated persons at time 0
 # These might be young care workers and hospital staff
 # For now, neglected. The others are assumed to be the oldest.
-VACC = 0.007  # fraction of the population vaccinated per day.
+VACC = 0.005  # fraction of the population vaccinated per day.
 # The vaccination is assumed to have immediate effect, modelling
 # receiving the shot two weeks earlier.
 # Only susceptible persons are vaccinated.
@@ -85,34 +88,36 @@ DECEASED = 8  # must be the highest numbered status
 
 
 def parameter():
-    parameter_dict = {"N": N,
-                      "Beta": BETA,
-                      "NDAYS": NDAYS,
-                      "P0": P0,
-                      "P_MEETING": P_MEETING,
-                      "P_QUARANTINE": P_QUARANTINE,
-                      "P_TRANSMIT0": P_TRANSMIT0,
-                      "P_COHAB": P_COHAB,
-                      "P_TRANSMIT1": P_TRANSMIT1,
-                      "NDAYS_VACC": NDAYS_VACC,
-                      "NDAYS_TRANSMIT": NDAYS_TRANSMIT,
-                      "DAY_SYMPTOMS": DAY_SYMPTOMS,
-                      "DAY_RECOVERY": DAY_RECOVERY,
-                      "DAY_RELEASE": DAY_RELEASE,
-                      "VACC0": VACC0,
-                      "BETA0": BETA0,
-                      "VACC": VACC,
-                      "STARTAGE": STARTAGE,
-                      "PERIOD": PERIOD,
-                      "RATIO_HF": RATIO_HF,
-                      "SUSCEPTIBLE": SUSCEPTIBLE,
-                      "INFECTIOUS": INFECTIOUS,
-                      "SYMPTOMATIC": SYMPTOMATIC,
-                      "QUARANTINED": QUARANTINED,
-                      "HOSPITALISED": HOSPITALISED,
-                      "RECOVERED": RECOVERED,
-                      "VACCINATED": VACCINATED,
-                      "TRANSMITTER": TRANSMITTER,
-                      "DECEASED": DECEASED
-                      }
-    return parameter_dict
+    return {"N": N,
+            "Beta": BETA,
+            "NDAYS": NDAYS,
+            "ENCOUNTERS": ENCOUNTERS,
+            "P_ENCOUNTER": P_ENCOUNTER,
+            "Vacc_readiness": Vacc_readiness,
+            "P0": P0,
+            "P_MEETING": P_MEETING,
+            "P_QUARANTINE": P_QUARANTINE,
+            "P_TRANSMIT0": P_TRANSMIT0,
+            "P_COHAB": P_COHAB,
+            "P_TRANSMIT1": P_TRANSMIT1,
+            "NDAYS_VACC": NDAYS_VACC,
+            "NDAYS_TRANSMIT": NDAYS_TRANSMIT,
+            "DAY_SYMPTOMS": DAY_SYMPTOMS,
+            "DAY_RECOVERY": DAY_RECOVERY,
+            "DAY_RELEASE": DAY_RELEASE,
+            "VACC0": VACC0,
+            "BETA0": BETA0,
+            "VACC": VACC,
+            "STARTAGE": STARTAGE,
+            "PERIOD": PERIOD,
+            "RATIO_HF": RATIO_HF,
+            "SUSCEPTIBLE": SUSCEPTIBLE,
+            "INFECTIOUS": INFECTIOUS,
+            "SYMPTOMATIC": SYMPTOMATIC,
+            "QUARANTINED": QUARANTINED,
+            "HOSPITALISED": HOSPITALISED,
+            "RECOVERED": RECOVERED,
+            "VACCINATED": VACCINATED,
+            "TRANSMITTER": TRANSMITTER,
+            "DECEASED": DECEASED
+            }

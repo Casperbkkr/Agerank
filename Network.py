@@ -6,6 +6,7 @@ import math
 import random as rd
 import sys
 
+
 from Read_data import *
 from Classes import *
 
@@ -49,7 +50,7 @@ def how_many_children(available_children):
 def make_households(N, dataframe, file1, file2, people_dict):
     makeup_data = read_makeup_households(file1)
     houses = calculate_houses(N, makeup_data)
-    child_dist = read_child_distribution("Kinder verdeling.csv")  # todo dit anders met de file
+    child_dist = read_child_distribution("Datafiles/Kinder verdeling.csv")  # todo dit anders met de file
     household_data = read_households(N, file2)
 
     amount_people, total_child_or_couple, non_couples = calculate_household(N, household_data)
@@ -134,10 +135,12 @@ def make_households(N, dataframe, file1, file2, people_dict):
             children[age_child] += -1
             house_dict[2 + number_of_children][-1].add_member(child)
             child.update_household(house_dict[2 + number_of_children][-1])
-    S = sum(couples)
+
     for house in R:
         available_ages1 = [index for index in range(len(couples)) if couples[index] > 0]
         age_1 = random.choice(available_ages1)
+        if len(people_dict[age_1]) == 0:
+            break
         person_1 = people_dict[age_1].pop(0)
         couples[age_1] += -1
 
@@ -149,6 +152,8 @@ def make_households(N, dataframe, file1, file2, people_dict):
                 available_ages2 = [index for index in range(len(couples)) if couples[index] > 0]
 
         age_2 = random.choice(available_ages2)
+        if len(people_dict[age_2]) == 0:
+            break
         person_2 = people_dict[age_2].pop(0)
         couples[age_2] += -1
 
@@ -168,23 +173,22 @@ def create_people(N, dataframe, vaccination_readiness):
     people = []
 
     # some changes to alter data to a usable type
-    household_data = read_households(N, "Personen_in_huishoudens_naar_leeftijd_en_geslacht.csv")
+    household_data = read_households(N, "Datafiles/Personen_in_huishoudens_naar_leeftijd_en_geslacht.csv")
     amount_people = calculate_household(N, household_data)[0]
-    amount_people = (amount_people["Fraction child"] + amount_people["Fraction couple with children"] + amount_people[
+    amount_people2 = (amount_people["Fraction child"] + amount_people["Fraction couple with children"] + amount_people[
         "Fraction couple without children"]).tolist()
     # amount_people.insert(0, 0)
 
     R = dataframe["Start of age group"].tolist()
     a_age = [R[i] - R[i - 1] for i in range(1, len(R))]
-    S = sum(a_age)
     added = 0
-    for i in range(len(amount_people)):
-        if a_age[i] < amount_people[i]:
-            added += amount_people[i] - a_age[i]
-            a_age[i] = int(amount_people[i])
+    for i in range(len(amount_people2)):
+        if a_age[i] < amount_people2[i]:
+            added += amount_people2[i] - a_age[i]
+            a_age[i] = int(amount_people2[i])
 
     for i in range(int(added)):
-        index = [k for k in range(32, len(amount_people)) if a_age[k] > amount_people[k]]
+        index = [k for k in range(32, len(amount_people2)) if a_age[k] > amount_people2[k]]
         remove = random.choice(index)
         a_age[remove] -= 1
 
@@ -353,7 +357,7 @@ def read_households(N, household_file, rows_to_remove=[0, 97, 98, 99, 100]):
 
 def calculate_household(N, dataframe):
     # calculate fractions of population
-    total = read_age_distribution('CBS_NL_population_20200101.txt').sum()[0]
+    total = read_age_distribution('Datafiles/CBS_NL_population_20200101.txt').sum()[0]
     total_child_or_couple = round(N * dataframe.sum().sum() / total)  # todo dit klopt niet
 
     out = pd.DataFrame()
@@ -385,7 +389,7 @@ def calculate_houses(N, dataframe):
     out = pd.DataFrame()
     makeup_data_list = dataframe.values[0][:-1]
 
-    # todo loss erbij zetten voor eenouder gezinnen
+    # todo los erbij zetten voor eenouder gezinnen
     # todo make work for all data, not hardcode
     people_in_household = [1, 1, 2, 3, 4, 5]
     fractions = [i / makeup_data_list[0] for i in makeup_data_list]
