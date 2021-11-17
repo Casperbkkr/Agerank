@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 from Model import *
 from Classes import track_statistics
 from Parameters import parameter
@@ -122,7 +122,9 @@ def plot_cov(tracker, timesteps):
     show(row(p1, p2))
 
 
-data = pd.read_csv("Custom_total.csv")
+file_name = "Old_young_total.csv"
+file_name = os.path.join("Results", file_name)
+data = pd.read_csv(file_name)
 plot_cov(data, 300)
 #data = pd.read_csv("Old_Young_total.csv")
 #plot_cov(data, 300)

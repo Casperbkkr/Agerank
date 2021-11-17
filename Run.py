@@ -7,7 +7,7 @@ from Model import model
 from Parameters import parameter
 
 # timesteps to simulate the model for
-timesteps = 10
+timesteps = 200
 # the amout of times the same model has to be ran
 k = 10
 # the type of order for the vaccination
