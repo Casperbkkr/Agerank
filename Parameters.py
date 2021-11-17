@@ -1,5 +1,5 @@
 # Main input parameters of the simulation, you may want to vary these.
-N = 10000  # 358974 # number of persons in the network,
+N = 100000 # number of persons in the network,
 # a trade-off between accuracy and speed
 BETA = 0.0  # fraction of young among the daily vaccinated persons
 NDAYS = 90  # number of days of the simulation

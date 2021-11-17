@@ -23,7 +23,7 @@ def couple_childless(house_dict, people_dict, amount_people, household_id):
         person_1 = people_dict[age_1].pop(0)
         couples[age_1] += -1
         available_ages1 = [index for index in range(len(couples)) if couples[index] > 0]
-        age_2 = random.choice(available_ages[:5])
+        age_2 = random.choice(available_ages1[:5])
         person_2 = people_dict[age_2].pop(0)
         couples[age_2] += -1
 
@@ -119,7 +119,6 @@ def make_households(N, dataframe, file1, file2, people_dict):
 
     couples = list(amount_people["Fraction couple with children"])
     # two parent households
-    S1 = sum(couples)
     R = []
     for couple in range(int(sum(two_parent_dist))):
         number_of_children = how_many_children(two_parent_dist)
@@ -268,14 +267,23 @@ def create_subnetwork(group1, group2, degree, i0, j0):
             i = group2.members[r1].person_id
             r2 = rd.randint(0, n - 1)
             j = group1.members[r2].person_id
-            if not i == j:
-                if group1.members[r2].household != 0:  # make sure the network is not overconnected
-                    members = group1.members[r2].household.members
-                    cohabitants = [members[i] for i in range(len(members)) if members[i] != j]
-                    for cohab in cohabitants:
-                        if cohab.age not in group2.ages:
-                            out.append((i, j))
-                            out.append((j, i))
+            if not i == j:  # no links to self
+                if group1.members[r2].household != 0:  # make sure the network is not over connected
+                    if group2.age_group_id not in group1.members[r2].overestimate:
+                        out.append((i, j))
+                        out.append((j, i))
+                        over = [T for T in group1.members[r2].household.members if (T != group1.members[r2]) and (T.age in group2.ages)]
+                        group1.members[r2].overestimation(group2.age_group_id)
+                        for T in over:
+                            group1.members[r2].overestimation(group2.age_group_id)
+
+                    if group1.members[r2].overestimate[group2.age_group_id] < degree:
+                        out.append((i, j))
+                        out.append((j, i))
+                        group1.members[r2].overestimation(group2.age_group_id)
+                    else:
+                        continue
+
                 if group1.members[r2].household == 0:
                     out.append((i, j))
                     out.append((j, i))

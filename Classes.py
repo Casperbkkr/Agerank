@@ -143,6 +143,14 @@ class person(object):
         self.days_since_infection = days_since_infection
         self.vaccination_readiness = vaccination_readiness
         self.household = 0
+        self.overestimate = {}
+
+    def overestimation(self, inp):
+        if inp in self.overestimate.keys():
+            self.overestimate[inp] += 1
+        else:
+            self.overestimate[inp] = 1
+
 
     def update_household(self, household):
         self.household = household

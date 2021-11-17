@@ -7,7 +7,7 @@ from Model import model
 from Parameters import parameter
 
 # timesteps to simulate the model for
-timesteps = 200
+timesteps = 300
 # the amout of times the same model has to be ran
 k = 10
 # the type of order for the vaccination
@@ -39,7 +39,7 @@ for vacc_order in vaccination_orders:
 
     results_total = results_total / k
     tracker = results_total.astype(int)
-    file_name_total1 = str(file_names[vacc_order]) + "_total.csv"
+    file_name_total_1 = str(file_names[vacc_order]) + "_total.csv"
     file_name_total_2 = os.path.join("Results", file_name_total_1)
     results.data.to_csv(file_name_total_2)
 

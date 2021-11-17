@@ -122,7 +122,7 @@ def plot_cov(tracker, timesteps):
     show(row(p1, p2))
 
 
-file_name = "Old_young_total.csv"
+file_name = "Old_young_0.csv"
 file_name = os.path.join("Results", file_name)
 data = pd.read_csv(file_name)
 plot_cov(data, 300)
