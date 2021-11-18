@@ -94,13 +94,13 @@ def plot_cov(tracker, timesteps):
         line_color="green",
         source=source)
 
-    p2.line(
-        x='time',
-        y='vaccinated',
-        legend_label='vaccinated',
-        line_width=1,
-        line_color="blue",
-        source=source)
+    #p2.line(
+      #  x='time',
+       # y='vaccinated',
+        #legend_label='vaccinated',
+        #line_width=1,
+        #line_color="blue",
+        #source=source)
 
     p2.line(
         x='time',
@@ -122,12 +122,7 @@ def plot_cov(tracker, timesteps):
     show(row(p1, p2))
 
 
-file_name = "Old_young_0.csv"
+file_name = "Old_young_25.csv"
 file_name = os.path.join("Results", file_name)
 data = pd.read_csv(file_name)
-plot_cov(data, 300)
-#data = pd.read_csv("Old_Young_total.csv")
-#plot_cov(data, 300)
-#data = pd.read_csv("Danish_total.csv")
-#plot_cov(data, 300)
-
+plot_cov(data, 400)

@@ -7,11 +7,11 @@ from Model import model
 from Parameters import parameter
 
 # timesteps to simulate the model for
-timesteps = 300
+timesteps = 400
 # the amout of times the same model has to be ran
-k = 10
+k = 100
 # the type of order for the vaccination
-vaccination_orders = [1, 2, 3, 4]
+vaccination_orders = [1]
 # the names for the datasets to be saved
 file_names = {1: "Old_young", 2: "Young_old", 3: "Danish", 4: "Custom"}
 
@@ -41,6 +41,6 @@ for vacc_order in vaccination_orders:
     tracker = results_total.astype(int)
     file_name_total_1 = str(file_names[vacc_order]) + "_total.csv"
     file_name_total_2 = os.path.join("Results", file_name_total_1)
-    results.data.to_csv(file_name_total_2)
+    results_total.to_csv(file_name_total_2)
 
     print("Saved as:", file_name_total_1)

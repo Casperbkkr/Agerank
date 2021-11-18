@@ -8,6 +8,8 @@ NDAYS = 90  # number of days of the simulation
 ENCOUNTERS = 10
 P_ENCOUNTER = 0.0005
 
+#
+STARTGROUP = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]
 # Willingness to take the vaccine if offered
 Vacc_readiness = 0.85
 # Probability parameters (0 <= P <= 1 must hold)
@@ -74,18 +76,6 @@ RATIO_HF = 3  # ratio between number of admissions to the hospital
 # this does not influence the simulation, as the age-dependence
 # of hospitalisation has been modelled through the fatality rate.
 
-# Possible status of infection
-SUSCEPTIBLE = 0
-INFECTIOUS = 1  # but no symptoms yet
-SYMPTOMATIC = 2  # but not quarantined
-QUARANTINED = 3
-HOSPITALISED = 4
-RECOVERED = 5
-VACCINATED = 6
-TRANSMITTER = 7  # infectious after being vaccinated or having recovered
-# (tests positive but has no symptoms)
-DECEASED = 8  # must be the highest numbered status
-
 
 def parameter():
     return {"N": N,
@@ -93,6 +83,7 @@ def parameter():
             "NDAYS": NDAYS,
             "ENCOUNTERS": ENCOUNTERS,
             "P_ENCOUNTER": P_ENCOUNTER,
+            "STARTGROUP": STARTGROUP,
             "Vacc_readiness": Vacc_readiness,
             "P0": P0,
             "P_MEETING": P_MEETING,
@@ -111,13 +102,13 @@ def parameter():
             "STARTAGE": STARTAGE,
             "PERIOD": PERIOD,
             "RATIO_HF": RATIO_HF,
-            "SUSCEPTIBLE": SUSCEPTIBLE,
-            "INFECTIOUS": INFECTIOUS,
-            "SYMPTOMATIC": SYMPTOMATIC,
-            "QUARANTINED": QUARANTINED,
-            "HOSPITALISED": HOSPITALISED,
-            "RECOVERED": RECOVERED,
-            "VACCINATED": VACCINATED,
-            "TRANSMITTER": TRANSMITTER,
-            "DECEASED": DECEASED
+            "SUSCEPTIBLE": 0,
+            "INFECTIOUS": 1,  # but no symptoms yet
+            "SYMPTOMATIC": 2,  # but not quarantined
+            "QUARANTINED": 3,
+            "HOSPITALISED": 4,
+            "RECOVERED": 5,
+            "VACCINATED": 6,
+            "TRANSMITTER": 7,  # infectious after being vaccinated or having recovered
+            "DECEASED": 8
             }

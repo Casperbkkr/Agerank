@@ -81,7 +81,7 @@ def initialize_model(parameters, files, order_type, tracker_changes):
 
     # Add corresponding age groups to dataframe
     # These age groups are all ages in the range(start_group[i],start_group[i+1])
-    start_group = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]  # todo put this in parameters
+    start_group = parameters["STARTGROUP"]  # todo put this in parameters
     print("Creating age group class objects.")
     data["Age group class object"] = make_age_groups(data, start_group, len(data.index))
 
