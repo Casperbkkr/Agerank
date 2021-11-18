@@ -111,13 +111,10 @@ def read_contact_data(dataframe, participants_file, contacts_file, PERIOD):
             k = int(data[3])  # age of participant
             if k < nages:
                 participants[k] += 1
-    # print('Number of participants for each age:\n', participants)
 
-    # todo count the participants by age group
     participants_group = np.zeros((ngroups), dtype=int)
     for r in range(nages):
         participants_group[groepen[r].id] += participants[k]
-    # print('Number of participants for each age group:', participants_group)
     # count the participants by age group
 
     # create contact matrix C based on a period of 30 days

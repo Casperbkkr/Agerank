@@ -47,10 +47,10 @@ def how_many_children(available_children):
     return number_of_children
 
 
-def make_households(N, dataframe, file1, file2, people_dict):
+def make_households(N, dataframe, file1, file2, file3, people_dict):
     makeup_data = read_makeup_households(file1)
     houses = calculate_houses(N, makeup_data)
-    child_dist = read_child_distribution("Datafiles/Kinder verdeling.csv")  # todo dit anders met de file
+    child_dist = read_child_distribution(file3)
     household_data = read_households(N, file2)
 
     amount_people, total_child_or_couple, non_couples = calculate_household(N, household_data)
@@ -162,7 +162,7 @@ def make_households(N, dataframe, file1, file2, people_dict):
         person_2.update_household(house)
         household_id += 1
 
-    # todo The rest is mostly single therefore negligble
+
 
     return house_dict
 
@@ -328,7 +328,6 @@ def create_network(dataframe, people, contact_data):
         i0 += Groepen[gi].size_group()
 
     # remove duplicates from the list
-    # todo Is sorteren van deze lijst strikt nodig?
     a = list(dict.fromkeys(out))
 
     return a
@@ -339,12 +338,12 @@ def create_network(dataframe, people, contact_data):
     # return a
 
 
-# todo remove rows to remove
-def read_households(N, household_file, rows_to_remove=[0, 97, 98, 99, 100]):
+
+def read_households(N, household_file):
     # Read the file containing data about the make up of household demographics
     household_data = pd.read_csv(household_file)
     household_data = household_data.fillna(0)  # replace missing data with zero values
-    household_data = household_data.drop(rows_to_remove)  # remove extra data
+    household_data = household_data.drop([0, 97, 98, 99, 100])  # remove extra data
     household_data = household_data.drop(["Geslacht", "Leeftijd", "Perioden"], axis=1)
 
     # Change notation of number to not use "." for seperation
@@ -366,7 +365,7 @@ def read_households(N, household_file, rows_to_remove=[0, 97, 98, 99, 100]):
 def calculate_household(N, dataframe):
     # calculate fractions of population
     total = read_age_distribution('Datafiles/CBS_NL_population_20200101.txt').sum()[0]
-    total_child_or_couple = round(N * dataframe.sum().sum() / total)  # todo dit klopt niet
+    total_child_or_couple = round(N * dataframe.sum().sum() / total)
 
     out = pd.DataFrame()
     new_names = ["Fraction child", "Fraction couple without children", "Fraction couple with children"]
@@ -397,13 +396,10 @@ def calculate_houses(N, dataframe):
     out = pd.DataFrame()
     makeup_data_list = dataframe.values[0][:-1]
 
-    # todo los erbij zetten voor eenouder gezinnen
-    # todo make work for all data, not hardcode
     people_in_household = [1, 1, 2, 3, 4, 5]
     fractions = [i / makeup_data_list[0] for i in makeup_data_list]
     number_of_households = [int((N * i) // k) for i, k in zip(fractions, people_in_household)]
     number_of_households[0] = sum(number_of_households[1:])
-    # todo make not hardcode
     column_names = ["Total", "One person", "Two Person", "Three person", "Four person", "Five or more person"]
 
     for name, value in zip(column_names, number_of_households):

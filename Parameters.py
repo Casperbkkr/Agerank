@@ -1,8 +1,7 @@
 # Main input parameters of the simulation, you may want to vary these.
-N = 100000 # number of persons in the network,
+N = 100000  # number of persons in the network,
 # a trade-off between accuracy and speed
-BETA = 0.0  # fraction of young among the daily vaccinated persons
-NDAYS = 90  # number of days of the simulation
+
 
 # For the following parameters choose sensible values, as realistic as possible.
 ENCOUNTERS = 10
@@ -31,7 +30,7 @@ P_TRANSMIT0 = 0.2  # probability of becoming a transmitter of the disease
 # when meeting an infected person, see the CDC brief
 # https://www.cdc.gov/coronavirus/2019-ncov/science/science-briefs/fully-vaccinated-people.html
 
-P_COHAB = 0.2  # todo add source
+P_COHAB = 0.2  # todo add source and commentaar
 
 P_TRANSMIT1 = 0.25  # probability of getting infected by a transmitter
 # when meeting him/her, see Levine-Tiefenbrun  et al.,
@@ -65,7 +64,6 @@ VACC = 0.005  # fraction of the population vaccinated per day.
 # for the fraction BETA, and old to young for the fraction 1-BETA.
 # The value is based on 100000 first doses per day.
 STARTAGE = 18  # starting age of the vaccination, country dependent (NL 18, IL 16)
-
 # Other parameters.
 PERIOD = 6  # number of days for which the contacts are the same group.
 # It must be between 1 (all monthly contacts are with different
@@ -79,8 +77,6 @@ RATIO_HF = 3  # ratio between number of admissions to the hospital
 
 def parameter():
     return {"N": N,
-            "Beta": BETA,
-            "NDAYS": NDAYS,
             "ENCOUNTERS": ENCOUNTERS,
             "P_ENCOUNTER": P_ENCOUNTER,
             "STARTGROUP": STARTGROUP,

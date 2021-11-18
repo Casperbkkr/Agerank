@@ -46,7 +46,7 @@ def initialise_vaccination(parameters, order, tracker_changes):
     return new_status_changes, order
 
 
-def vaccination_o(people, age_groups, type, start_age):
+def vaccination_order_fucntion(people, age_groups, type, start_age):
     # This is a function that creates a list of people to vaccinate to follow in the model
     if type == 1:  # Old to yound
         people = people[age_groups.iloc[start_age]:]
@@ -81,9 +81,8 @@ def initialize_model(parameters, files, order_type, tracker_changes):
 
     # Add corresponding age groups to dataframe
     # These age groups are all ages in the range(start_group[i],start_group[i+1])
-    start_group = parameters["STARTGROUP"]  # todo put this in parameters
     print("Creating age group class objects.")
-    data["Age group class object"] = make_age_groups(data, start_group, len(data.index))
+    data["Age group class object"] = make_age_groups(data, parameters["STARTGROUP"], len(data.index))
 
     # Determine how many people of each age there are
     print("Determining age distribution for population of " + str(parameters["N"]) + "people.")
@@ -100,12 +99,12 @@ def initialize_model(parameters, files, order_type, tracker_changes):
 
     # determine vaccination order
     print("Determining vaccination order")
-    vaccination_order = vaccination_o(people, data["Start of age group"], order_type, parameters["STARTAGE"])
+    vaccination_order = vaccination_order_function(people, data["Start of age group"], order_type, parameters["STARTAGE"])
 
     # create households
     print("Creating households")
     household_dict = make_households(parameters["N"], "a", files["Household_makeup_dataset"],
-                                     files["People_in_household_dataset"], people_age_dict)
+                                     files["People_in_household_dataset"], files["Child_distribution_dataset"], people_age_dict)
 
     # Create contact network
     print("Generating network.")
@@ -168,13 +167,14 @@ def infect_perturbation(parameters, people, tracker_changes):
     total_infected = sum(x)
     prob = 1 - (1 - parameters["P_ENCOUNTER"] * (total_infected / (parameters["N"] - 1))) ** (parameters["ENCOUNTERS"])
     to_infect = [i for i in range(n) if rd.random() < prob]
+
     for id in to_infect:
         person = people[id]
         if person.status == parameters["SUSCEPTIBLE"]:
             person.update_status(parameters["INFECTIOUS"])
             tracker_changes["currently infected"] += 1
             tracker_changes["total infected"] += 1
-            tracker_changes["susceptible"] += -1
+            tracker_changes["susceptible"] -= 1
         elif person.status == parameters["VACCINATED"]:
             person.update_status(parameters["TRANSMITTER"])
             tracker_changes['currently infected'] += 1
@@ -223,14 +223,13 @@ def infect_standard(parameters, network, people, tracker_changes):
                     person.update_status(parameters["INFECTIOUS"])
                     tracker_changes["currently infected"] += 1
                     tracker_changes["total infected"] += 1
-                    tracker_changes["susceptible"] += -1
+                    tracker_changes["susceptible"] -= 1
                 elif person.status == parameters["VACCINATED"]:
                     if rd.random() < parameters["P_TRANSMIT1"]:
                         person.update_status(parameters["TRANSMITTER"])
                         tracker_changes['currently infected'] += 1
                         tracker_changes['total infected'] += 1
                         tracker_changes["transmitter"] += 1
-                        # tracker_changes["vaccinated"] += -1
                         person.update_days_since_infection(1)
 
     return tracker_changes
@@ -351,7 +350,7 @@ def run_model_household(parameters, data, people, households, contact_matrix, or
     return tracker
 
 
-def model(parameters, filenames, type, timesteps=300):
+def model(parameters, filenames, type, timesteps):
     # this initializes and runs the entire model for a certain number of timesteps.
     # It returns a pandas dataframe containing all data at time t
     tracker = track_statistics()
