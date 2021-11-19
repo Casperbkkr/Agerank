@@ -6,13 +6,12 @@ import math
 import random as rd
 import sys
 
-
 from Read_data import *
 from Classes import *
 
 
 def couple_childless(house_dict, people_dict, amount_people, household_id):
-    # couples without children
+    # create the couples without children
     couples = list(amount_people["Fraction couple without children"])
     number_of_couples = int(sum(couples) / 2)
 
@@ -38,6 +37,8 @@ def couple_childless(house_dict, people_dict, amount_people, household_id):
 
 
 def how_many_children(available_children):
+    # choose the number of children to be placed
+    # returns the number of children
     dict = {}
     for i in range(len(available_children)):
         if available_children[i] > 0:
@@ -94,10 +95,12 @@ def make_households(N, dataframe, file1, file2, file3, people_dict):
     two_parent_dist.append(five_houses)
     two_parent_houses = [i * j for i, j in zip(two_parent_dist, [1, 2, 3, 4, 5])]
 
-    assert sum(two_parent_houses) + sum(one_parent_houses) == sum(children)
-    S = sum(two_parent_houses)
-    # one parent households
+    assert sum(two_parent_houses) + sum(one_parent_houses) == sum(
+        children)  # check that te children to be placed is equal to the children
+
+    # create one parent households
     for parent in range(sum(one_parent_dist)):
+        # choose a parent from the available ages
         available_ages = [index for index in list(people_dict.keys())[19:] if len(people_dict[index]) > 0]
         age = random.choice(available_ages)
         person = people_dict[age].pop(0)
@@ -135,23 +138,24 @@ def make_households(N, dataframe, file1, file2, file3, people_dict):
             house_dict[2 + number_of_children][-1].add_member(child)
             child.update_household(house_dict[2 + number_of_children][-1])
 
-    for house in R:
+    for house in R:  # choose parents for the previously created house with children
         available_ages1 = [index for index in range(len(couples)) if couples[index] > 0]
         age_1 = random.choice(available_ages1)
-        if len(people_dict[age_1]) == 0:
+        if len(people_dict[age_1]) == 0:  # imperfect fix for bug preventing final parent from being placed
             break
         person_1 = people_dict[age_1].pop(0)
         couples[age_1] += -1
 
         available_ages2 = []
-        while available_ages2 == []:
+        while available_ages2 == []:  # find partners close in age but extend search of non available
             if sum([index for index in range(len(couples)) if couples[index] > 0][age_1:]) > 0:
-                available_ages2 = [index for index in range(len(couples)) if couples[index] > 0][max(18, age_1-5):age_1 + 5]
+                available_ages2 = [index for index in range(len(couples)) if couples[index] > 0][
+                                  max(18, age_1 - 5):age_1 + 5]
             else:
                 available_ages2 = [index for index in range(len(couples)) if couples[index] > 0]
 
         age_2 = random.choice(available_ages2)
-        if len(people_dict[age_2]) == 0:
+        if len(people_dict[age_2]) == 0:  # imperfect fix for bug preventing final parent from being placed
             break
         person_2 = people_dict[age_2].pop(0)
         couples[age_2] += -1
@@ -161,8 +165,6 @@ def make_households(N, dataframe, file1, file2, file3, people_dict):
         house.add_member(person_2)
         person_2.update_household(house)
         household_id += 1
-
-
 
     return house_dict
 
@@ -272,7 +274,8 @@ def create_subnetwork(group1, group2, degree, i0, j0):
                     if group2.age_group_id not in group1.members[r2].overestimate:
                         out.append((i, j))
                         out.append((j, i))
-                        over = [T for T in group1.members[r2].household.members if (T != group1.members[r2]) and (T.age in group2.ages)]
+                        over = [T for T in group1.members[r2].household.members if
+                                (T != group1.members[r2]) and (T.age in group2.ages)]
                         group1.members[r2].overestimation(group2.age_group_id)
                         for T in over:
                             group1.members[r2].overestimation(group2.age_group_id)
@@ -336,7 +339,6 @@ def create_network(dataframe, people, contact_data):
     # print("lijst gesorteerd")
 
     # return a
-
 
 
 def read_households(N, household_file):

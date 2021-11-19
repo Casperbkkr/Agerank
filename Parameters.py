@@ -5,12 +5,17 @@ N = 100000  # number of persons in the network,
 
 # For the following parameters choose sensible values, as realistic as possible.
 ENCOUNTERS = 10
-P_ENCOUNTER = 0.0005
 
+# the probability of getting infected when encountering someone with whom the person has no real interaction.
+P_ENCOUNTER = 0.012
+# https://doi.org/10.1093/cid/ciab100
 #
+# The partition of agegroup. STARTGROUP[i] being the first age in the group and STARTGROUP[i+1]-1 being the last age
+# in the group.
 STARTGROUP = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]
-# Willingness to take the vaccine if offered
-Vacc_readiness = 0.85
+# Willingness to take the vaccine if offered. Based on current dutch vaccination rate(19-11-2021)
+# source: Coronadashboard
+Vacc_readiness = 0.847
 # Probability parameters (0 <= P <= 1 must hold)
 P0 = 0.003  # probability of infection at time 0
 P_MEETING = 0.004  # probability of meeting a contact on a given day
@@ -30,7 +35,10 @@ P_TRANSMIT0 = 0.2  # probability of becoming a transmitter of the disease
 # when meeting an infected person, see the CDC brief
 # https://www.cdc.gov/coronavirus/2019-ncov/science/science-briefs/fully-vaccinated-people.html
 
-P_COHAB = 0.2  # todo add source and commentaar
+# The probability of infecting someone that lives in the same household.
+P_COHAB = 0.211
+# https://doi.org/10.1093/cid/ciab100
+
 
 P_TRANSMIT1 = 0.25  # probability of getting infected by a transmitter
 # when meeting him/her, see Levine-Tiefenbrun  et al.,

@@ -13,7 +13,7 @@ Fatality_distribution_dataset = os.path.join("Datafiles", "fatality_rates_Levin2
 Polymod_contacts_dataset = os.path.join("Datafiles", "contacts_polymod_NL.txt")
 Polymod_participants_dataset = os.path.join("Datafiles", "participants_polymod_NL.txt")
 
-# Source: CBS
+# Source: NJI, https://www.nji.nl/cijfers/gezinnen
 Child_distribution_dataset = os.path.join("Datafiles", "Kinder verdeling.csv")
 
 # Source: CBS, Statistics Netherlands, https://opendata.cbs.nl

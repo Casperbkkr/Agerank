@@ -6,14 +6,16 @@ from Model import model
 
 from Parameters import parameter
 
+#This code can be used fro collecting data.
+
 # timesteps to simulate the model for
-timesteps = 400
-# the amout of times the same model has to be ran
-k = 100
-# the type of order for the vaccination
+timesteps = 300
+# the amount of times the same model has to be ran
+k = 1
+# the type of order for the vaccination, choose from dictionary below.
 vaccination_orders = [1]
 # the names for the datasets to be saved
-file_names = {1: "Old_young", 2: "Young_old", 3: "Danish", 4: "Custom"}
+file_names = {1: "Old_young", 2: "Young_old", 3: "Danish"}
 
 # load the parameters to be used in the model. Can be changed in the parameters.py file.
 parameters = parameter()

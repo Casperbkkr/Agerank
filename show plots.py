@@ -4,12 +4,12 @@ from Model import *
 from Classes import track_statistics
 from Parameters import parameter
 
-
 from bokeh.plotting import figure, output_file, show, ColumnDataSource
 from bokeh.models import HoverTool
 from bokeh.layouts import row
 
 
+# function for plotting results
 def plot_cov(tracker, timesteps):
     source = ColumnDataSource(data={'time': [t for t in range(timesteps)],
                                     'infected': tracker['currently infected'],
@@ -23,7 +23,6 @@ def plot_cov(tracker, timesteps):
                                     }
                               )
     p1 = figure(
-        title="Title",
         x_axis_label='days',
         y_axis_label='people',
         tools='reset,save,pan,wheel_zoom,box_zoom,xzoom_in,xzoom_out')
@@ -70,10 +69,9 @@ def plot_cov(tracker, timesteps):
                       ('hospitalized', '@hospitalized'),
                       ('vaccinated', '@vaccinated')]))
 
-    p1.legend.orientation = "horizontal"
+    p1.legend.orientation = "vertical"
 
     p2 = figure(
-        title="recovered",
         x_axis_label='days',
         y_axis_label='people',
         tools='reset,save,pan,wheel_zoom,box_zoom,xzoom_in,xzoom_out')
@@ -94,14 +92,6 @@ def plot_cov(tracker, timesteps):
         line_color="green",
         source=source)
 
-    #p2.line(
-      #  x='time',
-       # y='vaccinated',
-        #legend_label='vaccinated',
-        #line_width=1,
-        #line_color="blue",
-        #source=source)
-
     p2.line(
         x='time',
         y='deceased',
@@ -117,12 +107,16 @@ def plot_cov(tracker, timesteps):
                       ('total infected', '@total_infected'),
                       ('deceased', '@deceased')]))
 
-    p2.legend.orientation = "horizontal"
+    p2.legend.orientation = "vertical"
+    p2.legend.location = "top_left"
     # show the results
     show(row(p1, p2))
 
 
-file_name = "Old_young_25.csv"
-file_name = os.path.join("Results", file_name)
+
+# Name pf results to be shown.
+file = "Old_young_6" + ".csv"
+
+file_name = os.path.join("Results", file)
 data = pd.read_csv(file_name)
 plot_cov(data, 400)
