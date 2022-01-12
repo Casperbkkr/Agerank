@@ -1,14 +1,17 @@
-#AgeRank
-##General info
+# AgeRank
+
+## General info
 The aim of this project has been to model the spread of airborne pathogens in a network based on demographic  data.
 It consists of two major parts. The first being the creation of the network. Using the Polymod study and data about the makeup of households. 
 Another important goal has been to make it easy to use different datasets.
-##Requirements
+## Requirements
 * Bokeh
 * Pandas
 * Numpy
-##How to use
-###Inputs
+
+## How to use
+
+### Inputs
 There are two different types of inputs needed. The first are the parameters. 
 These can be changed in the parameters.py file. Further explanation is included there. \
 The second type are the datasets. There are standard datasets included. These datasets are about dutch demographics.
@@ -19,5 +22,6 @@ The results will be placed in the results directory. These can be visualized wit
 ### Visualization
 To plot graphs of the results you can use the show plots.py script. Put in the names of the files to be shown and run the script.
 It will open to html pages with graphs.
+
 ![This is an image](https://myoctocat.com/assets/images/base-octocat.svg)
 
