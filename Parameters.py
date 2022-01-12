@@ -1,24 +1,21 @@
 # Main input parameters of the simulation, you may want to vary these.
-N = 100000  # number of persons in the network,
+N = 10000  # number of persons in the network,
 # a trade-off between accuracy and speed
 
 
 # For the following parameters choose sensible values, as realistic as possible.
 ENCOUNTERS = 10
 
-# the probability of getting infected when encountering someone with whom the person has no real interaction.
-P_ENCOUNTER = 0.012
-# https://doi.org/10.1093/cid/ciab100
 #
 # The partition of agegroup. STARTGROUP[i] being the first age in the group and STARTGROUP[i+1]-1 being the last age
 # in the group.
 STARTGROUP = [0, 4, 12, 18, 25, 35, 45, 55, 65, 75]
 # Willingness to take the vaccine if offered. Based on current dutch vaccination rate(19-11-2021)
-# source: Coronadashboard
-Vacc_readiness = 0.847
+# source: Coronadashboard as of 14-12-2021
+Vacc_readiness = 0.855
 # Probability parameters (0 <= P <= 1 must hold)
 P0 = 0.003  # probability of infection at time 0
-P_MEETING = 0.004  # probability of meeting a contact on a given day
+P_MEETING = 0.006  # probability of meeting a contact on a given day
 # and becoming infected.
 # A base value in a non lockdown situation would be 0.02,
 # assuming that 10% of daily meetings results in an infection
@@ -26,6 +23,13 @@ P_MEETING = 0.004  # probability of meeting a contact on a given day
 # For the lockdown situation, this number has been reduced.
 # Here, an 80%-effective lockdown multiplies
 # P_MEETING by a further factor 0.2.
+# Furthermore  it is estimated that the delta strain of the covid virus is between 40 and 60 percent more contagious.
+# Therefore we multiply by 1.5
+
+# the probability of getting infected when encountering someone with whom the person has no real interaction.
+P_ENCOUNTER = 0.012
+# Source: https://doi.org/10.1093/cid/ciab100
+# The paper above estimates it to be 0.012.
 P_QUARANTINE = 0.9  # probability of a person with symptoms going into
 # quarantine where the alternative is being symptomatic
 # and still infecting others. This takes into account
@@ -40,10 +44,12 @@ P_COHAB = 0.211
 # https://doi.org/10.1093/cid/ciab100
 
 
-P_TRANSMIT1 = 0.25  # probability of getting infected by a transmitter
+P_TRANSMIT1 = 0.375  # probability of getting infected by a transmitter
 # when meeting him/her, see Levine-Tiefenbrun  et al.,
 # Decreased SARS-CoV-2 viral load following vaccination.
 # https://www.medrxiv.org/content/10.1101/2021.02.06.21251283v1.full.pdf
+# Furthermore  it is estimated that the delta strain of the covid virus is between 40 and 60 percent more contagious.
+# Therefore we multiply by 1.5
 
 # Time parameters based on characteristics of the disease.
 # This is a simplification, since the actual development of the disease
@@ -71,6 +77,7 @@ VACC = 0.005  # fraction of the population vaccinated per day.
 # The order is by increasing index (young to old)
 # for the fraction BETA, and old to young for the fraction 1-BETA.
 # The value is based on 100000 first doses per day.
+VACC_RAND = 0.5  # fraction of vaccines distributed to young people daily
 STARTAGE = 18  # starting age of the vaccination, country dependent (NL 18, IL 16)
 # Other parameters.
 PERIOD = 6  # number of days for which the contacts are the same group.
@@ -83,7 +90,7 @@ RATIO_HF = 3  # ratio between number of admissions to the hospital
 # of hospitalisation has been modelled through the fatality rate.
 
 
-def parameter():
+def parameter() -> dict:
     return {"N": N,
             "ENCOUNTERS": ENCOUNTERS,
             "P_ENCOUNTER": P_ENCOUNTER,
@@ -103,6 +110,7 @@ def parameter():
             "VACC0": VACC0,
             "BETA0": BETA0,
             "VACC": VACC,
+            "VACC_RAND": VACC_RAND,
             "STARTAGE": STARTAGE,
             "PERIOD": PERIOD,
             "RATIO_HF": RATIO_HF,

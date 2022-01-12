@@ -1,20 +1,21 @@
-import random as rd
-import sys
-
 from Network import *
 from Read_data import *
 from Classes import *
 
 
-def initialise_infection(parameters, people, tracker_changes):
+def initialise_infection(parameters: dict, people: list, tracker_changes: dict) -> dict:
     """ This function creates an array of n vertices (persons)
     and randomly initialises a fraction P0 of the persons
     as infected, denoted by status[i]=INFECTIOUS.
     Otherwise, status[i]=SUSCEPTIBLE.
+
+    :param parameters: dictionary with all the parameters for the model
+    :param people: list with people objects in the network
+    :param tracker_changes: dictionary with changes
+    :return: the changes in the tracked statistics
     """
 
     # infect a fraction P0 of the population
-    # todo dit kan sneller door willekeurig N*P0 elements uit range(0,N) te kiezen zonder terugleggen
     for person in people:
         if rd.random() < parameters["P0"]:
             person.update_status(parameters["INFECTIOUS"])
@@ -27,11 +28,13 @@ def initialise_infection(parameters, people, tracker_changes):
     return tracker_changes
 
 
-def initialise_vaccination(parameters, order, tracker_changes):
-    # Initializes a fraction of to population with a vaccination
+def initialise_vaccination(parameters: dict, order: list, tracker_changes: dict) -> [dict, list]:
+    # Initializes a fraction of the population with a vaccination
+    # input:
+    # returns
     new_status_changes = tracker_changes
 
-    # vacinate a fraction VACC0 of the population
+    # vaccinate a fraction VACC0 of the population
     min_old1 = math.floor((1 - parameters["BETA0"]) * parameters["VACC0"] * parameters["N"])
     min_old = max(min_old1, 0)
 
@@ -46,24 +49,57 @@ def initialise_vaccination(parameters, order, tracker_changes):
     return new_status_changes, order
 
 
-def vaccination_order_function(people, age_groups, type, start_age):
+def vaccination_order_function(parameters: dict, people: list, age_groups, type: int) -> list:
     # This is a function that creates a list of people to vaccinate to follow in the model
-    if type == 1:  # Old to yound
-        people = people[age_groups.iloc[start_age]:]
+    if type == 1:  # Old to young
+        people = people[age_groups.iloc[parameters["STARTAGE"]]:]
         people.reverse()
         order = people
+
     if type == 2:  # Young to old
-        order = people[age_groups.iloc[start_age]:]
-    if type == 3:  # Danish way
-        tail = rd.sample(people[age_groups.iloc[start_age]:age_groups.iloc[50]], len(people[age_groups.iloc[start_age]:age_groups.iloc[50]]))
-        start = people[age_groups.iloc[50]:]
-        start.reverse()
-        order = start + tail
+        order = people[age_groups.iloc[parameters["STARTAGE"]]:]
+
+    if type == 3:  # order with small part young people, between 18 and 50 years of age, vaccinated everyday.
+        # figure out index in people of age 18 and over
+        c = 0
+        while people[c].age != parameters["STARTAGE"]:
+            c += 1
+        people = people[c:]
+        # figure out index in people of age 50 and over
+        t = 0
+        while people[t].age != 50:
+            t += 1
+
+        daily_vaccines = parameters["VACC"] * len(people)
+        number_young = round(parameters["VACC_RAND"] * daily_vaccines)
+        number_old = int(daily_vaccines - number_young)
+        vaccination_rounds = round(
+            len(people) / daily_vaccines)  # number of days needed to fully vaccinate everyone in the network
+        order = []
+        for i in range(vaccination_rounds - 1):
+            for j in range(number_old):  # add oldest to the order
+                person = people.pop(-1)
+                order.append(person)
+
+            if person.age > 50:  # todo remove hardcode 50
+                for k in range(number_young):
+                    a = random.choice(people[:t])
+                    people.remove(a)
+                    order.append(a)
+            else:
+                for k in range(number_young):
+                    a = random.choice(people[:person.person_id])
+                    people.remove(a)
+                    order.append(a)
+
+        people.reverse()
+        order + people  # add remaining people
 
     return order
 
 
-def initialize_model(parameters, files, order_type, tracker_changes):
+def initialize_model(parameters: dict, files: dict, order_type: int, tracker_changes: dict) \
+        -> [object, list, dict, list, list, dict, dict]:
     # This initializes everything for the model to run
 
     # Read age distribution and add to dataframe
@@ -92,14 +128,25 @@ def initialize_model(parameters, files, order_type, tracker_changes):
     print("Creating people.")
     people, people_age_dict = create_people(parameters["N"], data, parameters["Vacc_readiness"])
 
+    mylist1 = data["IFR"].values.tolist()
+    mylist1 = list(dict.fromkeys(mylist1))
+    number1 = [i for i in mylist1]
+
+    mylist = data["Age group class object"].values.tolist()
+    mylist = list(dict.fromkeys(mylist))
+    number2 = [i.size_group() for i in mylist]
+    number3 = sum(number2)
+    expected = sum([a * b for a, b in zip(number1, number2)])
+
     # determine vaccination order
     print("Determining vaccination order")
-    vaccination_order = vaccination_order_function(people, data["Start of age group"], order_type, parameters["STARTAGE"])
+    vaccination_order = vaccination_order_function(parameters, people, data["Start of age group"], order_type)
 
     # create households
     print("Creating households")
-    household_dict = make_households(parameters["N"], "a", files["Household_makeup_dataset"],
-                                     files["People_in_household_dataset"], files["Child_distribution_dataset"], people_age_dict)
+    household_dict = make_households(parameters["N"], files["Household_makeup_dataset"],
+                                     files["People_in_household_dataset"], files["Child_distribution_dataset"],
+                                     people_age_dict)
 
     # Create contact network
     print("Generating network.")
@@ -114,7 +161,7 @@ def initialize_model(parameters, files, order_type, tracker_changes):
     return data, people, household_dict, contact_matrix, vaccination_order, tracker_changes, people_age_dict
 
 
-def infect_cohabitants(parameters, people, house_dict, tracker_changes):
+def infect_cohabitants(parameters: dict, people: list, tracker_changes: dict) -> dict:
     # Method of infection for people in the same house.
     # todo needs to made faster with a sparse matrix instead of looking up everyones household. Also for further work.
 
@@ -148,7 +195,7 @@ def infect_cohabitants(parameters, people, house_dict, tracker_changes):
     return tracker_changes
 
 
-def infect_perturbation(parameters, people, tracker_changes):
+def infect_perturbation(parameters: dict, people: list, tracker_changes: dict) -> dict:
     # this infects a fraction of the poplulation proportional to the the amount of infections
     n = len(people)
     x = np.zeros((n + 1), dtype=int)
@@ -180,7 +227,7 @@ def infect_perturbation(parameters, people, tracker_changes):
     return tracker_changes
 
 
-def infect_standard(parameters, network, people, tracker_changes):
+def infect_standard(parameters: dict, network: list, people: list, tracker_changes: dict) -> dict:
     """This function performs one time step (day) of the infections
     a is the n by n adjacency matrix of the network
     status represents the health status of the persons.
@@ -204,9 +251,6 @@ def infect_standard(parameters, network, people, tracker_changes):
         y[i] += x[j]
 
     for person in people:
-        # incorporate the daily probability of meeting a contact
-        # taking into account the possibility of being infected twice
-
         if y[person.person_id] > 0:
             r = rd.random()
             if y[person.person_id] == 1:
@@ -230,11 +274,12 @@ def infect_standard(parameters, network, people, tracker_changes):
     return tracker_changes
 
 
-def update(parameters, fatality, people, status_changes):
+def update(parameters: dict, fatality: float, people: list, status_changes: dict) -> dict:
     """This function updates the status and increments the number
     of days that a person has been infected.
     For a new infection, days[i]=1.  For uninfected persons, days[i]=0.
     Input: infection fatality rate and age of persons i
+    Return: status_changes: a dictionary containing the numbers all tracked properties
     """
     new_status_changes = status_changes
     for person in people:
@@ -255,7 +300,7 @@ def update(parameters, fatality, people, status_changes):
 
         if (person.status == parameters["QUARANTINED"]) and person.days_since_infection == parameters["DAY_RECOVERY"]:
             new_status_changes["quarantined"] += -1
-            if rd.random() < RATIO_HF * fatality[person.age]:
+            if rd.random() < parameters["RATIO_HF"] * fatality[person.age]:
                 person.update_status(parameters["HOSPITALISED"])
                 new_status_changes["hospitalized"] += 1
             else:
@@ -265,7 +310,7 @@ def update(parameters, fatality, people, status_changes):
 
         if person.status == parameters["SYMPTOMATIC"] and person.days_since_infection == parameters["DAY_RECOVERY"]:
             new_status_changes["symptomatic"] += -1
-            if rd.random() < RATIO_HF * fatality[person.age]:
+            if rd.random() < parameters["RATIO_HF"] * fatality[person.age]:
                 person.update_status(parameters["HOSPITALISED"])
                 new_status_changes["hospitalized"] += 1
             else:
@@ -275,7 +320,7 @@ def update(parameters, fatality, people, status_changes):
 
         if person.status == parameters["HOSPITALISED"] and person.days_since_infection == parameters["DAY_RELEASE"]:
             new_status_changes["hospitalized"] += -1
-            if rd.random() < 1 / RATIO_HF:
+            if rd.random() < 1 / parameters["RATIO_HF"]:
                 person.update_status(parameters["DECEASED"])
                 new_status_changes["deceased"] += 1
                 new_status_changes["currently infected"] += -1
@@ -293,48 +338,50 @@ def update(parameters, fatality, people, status_changes):
     return new_status_changes
 
 
-def vaccinate(parameters, people, status_changes, order):
+def vaccinate(parameters: dict, people: list, status_changes: dict, order: list) -> dict:
     """This function performs one time step (day) of the vaccinations.
     status represents the health status of the persons.
     Only the susceptible or recovered (after a number of days) are vaccinated
     """
 
     new_status_changes = status_changes
-    n = len(people)
 
     # today's number of vaccines
     vacc = math.floor(parameters["N"] * parameters["VACC"])
     for i in range(min(vacc, len(order))):
         person = order.pop(0)
         if person.status == parameters["SUSCEPTIBLE"]:
-            if person.vaccination_readiness == True:
+            if person.vaccination_readiness:
                 person.update_status(parameters["VACCINATED"])
                 new_status_changes["susceptible"] += -1
                 new_status_changes["vaccinated"] += 1
 
-        if person.status == parameters["RECOVERED"] and person.days_since_infection >= parameters["DAY_RECOVERY"] + parameters["NDAYS_VACC"]:
+        if person.status == parameters["RECOVERED"] and person.days_since_infection >= parameters["DAY_RECOVERY"] + \
+                parameters["NDAYS_VACC"]:
             person.update_status(parameters["VACCINATED"])
             new_status_changes["vaccinated"] += 1
 
     return new_status_changes, order
 
 
-def run_model(parameters, data, people, households, contact_matrix, order, tracker, timesteps,
-                        start_vaccination=0):
+def run_model(parameters: dict, data: object, people: list, households: dict, contact_matrix: list, order: list,
+              tracker: dict, timesteps: int,
+              start_vaccination: int = 0) -> dict:
     # Function for running the model. It wraps the vaccinate, infection and update functions
     for time in range(timesteps):
         sys.stdout.write('\r' + "Tijdstap: " + str(time))
         sys.stdout.flush()
         status_changes_0 = tracker.empty_changes()
+
         if time < start_vaccination:
-            status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
+            status_changes_1 = infect_cohabitants(parameters, people, status_changes_0)
             status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_1)
             status_changes_3 = infect_perturbation(parameters, people, status_changes_2)
             status_changes_4 = update(parameters, data['IFR'], people, status_changes_3)
 
             tracker.update_statistics(status_changes_4)
         else:
-            status_changes_1 = infect_cohabitants(parameters, people, households, status_changes_0)
+            status_changes_1 = infect_cohabitants(parameters, people, status_changes_0)
             status_changes_2 = infect_standard(parameters, contact_matrix, people, status_changes_1)
             status_changes_3 = infect_perturbation(parameters, people, status_changes_2)
             status_changes_4 = update(parameters, data['IFR'], people, status_changes_3)
@@ -345,11 +392,14 @@ def run_model(parameters, data, people, households, contact_matrix, order, track
     return tracker
 
 
-def model(parameters, filenames, type, timesteps):
+def model(parameters: dict, filenames: dict, type: int, timesteps: int = 400) -> dict:
     # this initializes and runs the entire model for a certain number of timesteps.
-    # It returns a pandas dataframe containing all data at time t
+    # It returns a pandas dataframe containing all data.
+
+    #initialize an empty tracker
     tracker = track_statistics()
 
+    # initialize the model
     tracker_changes = tracker.init_empty_changes()
     data, people, households, contact_matrix, order, tracker_changes, people_dict = initialize_model(parameters,
                                                                                                      filenames,
@@ -360,6 +410,6 @@ def model(parameters, filenames, type, timesteps):
 
     # Run the model
     tracker = run_model(parameters, data, people, households, contact_matrix, order, tracker, timesteps - 1,
-                                  0)
+                        0)
 
     return tracker

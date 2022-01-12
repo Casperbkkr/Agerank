@@ -1,17 +1,33 @@
 import random
-
-import numpy as np
-import pandas as pd
-import math
 import random as rd
 import sys
+import pandas as pd
 
 from Read_data import *
 from Classes import *
 
 
-def couple_childless(house_dict, people_dict, amount_people, household_id):
-    # create the couples without children
+def couple_childless(house_dict: dict, people_dict: dict, amount_people: object, household_id: int) \
+                    -> [dict, dict, object, int]:
+    """This function creates the number of couples without children estimated to be in the network and places them in two person houses
+
+    input:
+    house_dict = dictionary with key size of house and value number available
+    people_dict = dictionary with key age and value people not in a house of that age
+    amount_people = dataframe with the number of people of a certain age living in a couple.
+    household_id = value that gives every household a key id for easier identification
+
+    This function changes all of the input variables and gives them back in with the new household accounted for
+
+    output:
+    house_dict = dictionary with key size of house and value number available
+    people_dict = dictionary with key age and value people not in a house of that age
+    amount_people = dataframe with the number of people of a certain age living in a couple.
+    household_id = value that gives every household a key id for easier identification
+
+
+    """
+
     couples = list(amount_people["Fraction couple without children"])
     number_of_couples = int(sum(couples) / 2)
 
@@ -36,9 +52,14 @@ def couple_childless(house_dict, people_dict, amount_people, household_id):
     return house_dict, people_dict, amount_people, household_id
 
 
-def how_many_children(available_children):
-    # choose the number of children to be placed
-    # returns the number of children
+def how_many_children(available_children: list) -> int:
+    """
+    This function chooses 1,2 or 3 children depending on whether there are still that many children available
+
+    input:
+    available_children = list with the amount of household with that many children left to be created.
+    """
+
     dict = {}
     for i in range(len(available_children)):
         if available_children[i] > 0:
@@ -48,7 +69,13 @@ def how_many_children(available_children):
     return number_of_children
 
 
-def make_households(N, dataframe, file1, file2, file3, people_dict):
+def make_households(N: int, file1: str, file2: str, file3: str, people_dict: dict) -> dict:
+    """"
+    This function creates all the households in the simulation. It first calculates how many of each type there should be.
+    It then proceeds to create these. It uses demographical data as input.
+    input:
+
+    """
     makeup_data = read_makeup_households(file1)
     houses = calculate_houses(N, makeup_data)
     child_dist = read_child_distribution(file3)
@@ -169,7 +196,19 @@ def make_households(N, dataframe, file1, file2, file3, people_dict):
     return house_dict
 
 
-def create_people(N, dataframe, vaccination_readiness):
+def create_people(N: int, dataframe: pd.DataFrame, vaccination_readiness: float) -> [list, dict]:
+    """
+    input:
+    N = number of people to be created
+    dataframe = contains data about age distribution
+    vaccination_readiness = willingness to vaccinate
+
+    output:
+    people = list of person objects
+    dict = dictionary with key age and value a list of the person objects of that age.
+    """
+
+
     dict = {}
     people = []
 
@@ -228,7 +267,7 @@ def create_people(N, dataframe, vaccination_readiness):
     return people, dict
 
 
-def create_subnetwork(group1, group2, degree, i0, j0):
+def create_subnetwork(group1: age_group_class, group2: age_group_class, degree: float, i0: int, j0: int) -> list:
     n = group1.size_group()
     m = group2.size_group()
     # determine whether the block is a diagonal block,
@@ -294,7 +333,7 @@ def create_subnetwork(group1, group2, degree, i0, j0):
         return out
 
 
-def create_network(dataframe, people, contact_data):
+def create_network(dataframe: pd.DataFrame, people: list, contact_data: np.ndarray) -> list:
     """This function creates an n by n adjacency matrix A
     that defines a random network with n vertices,
     where vertex i has a number of contacts determined
@@ -335,13 +374,8 @@ def create_network(dataframe, people, contact_data):
 
     return a
 
-    # a.sort()
-    # print("lijst gesorteerd")
 
-    # return a
-
-
-def read_households(N, household_file):
+def read_households(N: int, household_file: str) -> pd.DataFrame:
     # Read the file containing data about the make up of household demographics
     household_data = pd.read_csv(household_file)
     household_data = household_data.fillna(0)  # replace missing data with zero values
@@ -364,7 +398,7 @@ def read_households(N, household_file):
     return household_data
 
 
-def calculate_household(N, dataframe):
+def calculate_household(N: int, dataframe: pd.DataFrame) -> [pd.DataFrame, int, int]:
     # calculate fractions of population
     total = read_age_distribution('Datafiles/CBS_NL_population_20200101.txt').sum()[0]
     total_child_or_couple = round(N * dataframe.sum().sum() / total)
@@ -394,7 +428,7 @@ def calculate_household(N, dataframe):
     return out, total_child_or_couple, N - total_child_or_couple
 
 
-def calculate_houses(N, dataframe):
+def calculate_houses(N: int, dataframe: pd.DataFrame) -> pd.DataFrame:
     out = pd.DataFrame()
     makeup_data_list = dataframe.values[0][:-1]
 

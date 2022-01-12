@@ -1,13 +1,11 @@
 from Classes import age_group_class
-from Datasets import filenames_dictionary
 
 import numpy as np
 import pandas as pd
 import math
 
 
-
-def read_age_distribution(age_dist_file, csv_or_txt="txt"):
+def read_age_distribution(age_dist_file: str, csv_or_txt: str = "txt") -> pd.DataFrame:
     """This function reads the population data, each line containing
     the number of persons of a certain age. The lowest age is 0,
     the highest age contains everyone of that age and higher.
@@ -32,7 +30,7 @@ def read_age_distribution(age_dist_file, csv_or_txt="txt"):
     return population
 
 
-def read_fatality_distribution(fatality_distribution_file, number_of_ages):
+def read_fatality_distribution(fatality_distribution_file: str, number_of_ages: int) -> list:
     """This function reads the age-specific infection fatality rates
     (IFR) for covid-19 infections, as given in Table 3 of the article
     'Assessing the age specificity of infection fatality rates
@@ -67,7 +65,7 @@ def read_fatality_distribution(fatality_distribution_file, number_of_ages):
     return fatality
 
 
-def make_age_groups(dataframe, inp, number_of_ages):
+def make_age_groups(dataframe: pd.DataFrame, inp: list, number_of_ages: int) -> list:
     out = []
     number_of_age_groups = len(inp)
     for i in range(0, number_of_age_groups - 1):
@@ -82,7 +80,8 @@ def make_age_groups(dataframe, inp, number_of_ages):
     return out
 
 
-def read_contact_data(dataframe, participants_file, contacts_file, PERIOD):
+def read_contact_data(dataframe: pd.DataFrame, participants_file: str, contacts_file: str, PERIOD: int) \
+                     -> np.ndarray:
     """This function reads the participants and contacts per age group
     from the POLYMOD project.
 
@@ -163,12 +162,11 @@ def read_contact_data(dataframe, participants_file, contacts_file, PERIOD):
     return degree
 
 
-def determine_age_distribution(parameters, dataframe):
+def determine_age_distribution(parameters: dict, dataframe: pd.DataFrame):
     '''
     determine age distribution for persons in network to be created
-    :param N: Number of people to be modelled in the population
-    :param population: population[k] = number of persons of age k
-    :return:
+    :param parameters:
+    :param dataframe:
     This function returns a list with the amount of people of a certain age in the network.
     '''
 
@@ -182,14 +180,14 @@ def determine_age_distribution(parameters, dataframe):
     return start_age
 
 
-def read_makeup_households(file):
+def read_makeup_households(file: str) -> pd.DataFrame:
     """
 
     :rtype: object
     """
     makeup_data = pd.read_csv(file)
     makeup_data["One parent household"] = (
-                makeup_data["Eenouderhuishoudens"] / makeup_data["Totaal particuliere huishoudens"])
+            makeup_data["Eenouderhuishoudens"] / makeup_data["Totaal particuliere huishoudens"])
     makeup_data = makeup_data.drop(["Leeftijd referentiepersoon", "Perioden", "Regio's", "Meerpersoonshuishoudens"],
                                    axis=1)
     makeup_data = makeup_data.drop(
@@ -198,9 +196,10 @@ def read_makeup_households(file):
     return makeup_data.iloc[[4]].reset_index(drop=True)
 
 
-def read_child_distribution(file):
+def read_child_distribution(file: str) -> pd.DataFrame:
     child_data = pd.read_csv(file)
-    child_data["Tweeouderhuishoudens"] = child_data["Tweeouderhuishoudens gehuwd"] + child_data["Tweeouderhuishoudens ongehuwd"]
+    child_data["Tweeouderhuishoudens"] = child_data["Tweeouderhuishoudens gehuwd"] + child_data[
+        "Tweeouderhuishoudens ongehuwd"]
     child_data = child_data.drop(["Tweeouderhuishoudens gehuwd", "Tweeouderhuishoudens ongehuwd"], axis=1)
     child_data = child_data.rename(index={0: 1, 1: 2, 2: 3})
 
@@ -210,6 +209,3 @@ def read_child_distribution(file):
         child_data.iloc[:, i] = p_dist
 
     return child_data
-
-
-

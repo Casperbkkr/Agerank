@@ -24,7 +24,7 @@ People_in_household_dataset = os.path.join("Datafiles", "Personen_in_huishoudens
 
 
 # now wrap everything into a dictionary for easy access:
-def filenames_dictionary():
+def filenames_dictionary() -> dict:
     return {"Population_dataset": Population_dataset,
             "Fatality_distribution_dataset": Fatality_distribution_dataset,
             "Polymod_contacts_dataset": Polymod_contacts_dataset,

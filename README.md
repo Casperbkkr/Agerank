@@ -12,7 +12,12 @@ Another important goal has been to make it easy to use different datasets.
 There are two different types of inputs needed. The first are the parameters. 
 These can be changed in the parameters.py file. Further explanation is included there. \
 The second type are the datasets. There are standard datasets included. These datasets are about dutch demographics.
-To change the datasets add them to the datafiles folder and change the path for the corresponding filename.
-To run the code you need to specify the timesteps to be simulated and the number of times the model is to be ran for all vaccination strategies.
+To change the datasets add them to the datafiles folder and change the path to the corresponding filename in Datasets.py.
+To run the code you need to specify the timesteps to be simulated and the number of times the model is to be run for all vaccination strategies.
 The results will be placed in the results directory. These can be visualized with the show_plots.py file.
+
+### Visualization
+To plot graphs of the results you can use the show plots.py script. Put in the names of the files to be shown and run the script.
+It will open to html pages with graphs.
+![This is an image](https://myoctocat.com/assets/images/base-octocat.svg)
 

@@ -1,27 +1,30 @@
 import pandas as pd
 import numpy as np
 import os
+
 from Datasets import filenames_dictionary
 from Model import model
-
 from Parameters import parameter
 
-#This code can be used fro collecting data.
+#  This code can be used for collecting data.
 
-# timesteps to simulate the model for
-timesteps = 300
-# the amount of times the same model has to be ran
-k = 1
-# the type of order for the vaccination, choose from dictionary below.
-vaccination_orders = [1]
-# the names for the datasets to be saved
-file_names = {1: "Old_young", 2: "Young_old", 3: "Danish"}
+# Timesteps to simulate the model for
+timesteps = 400
+# The amount of times the same model has to be run
+k = 20
+# The type of order for the vaccination, choose from dictionary below.
+vaccination_orders = [1, 2, 3]
 
-# load the parameters to be used in the model. Can be changed in the parameters.py file.
+# The names for the datasets to be saved
+file_names = {1: "Old_young", 2: "Young_old", 3: "Mix"}
+
+# Load the parameters to be used in the model. Can be changed in the parameters.py file.
 parameters = parameter()
-# load the filenames of the datasets to be used
+
+# Load the filenames of the datasets to be used
 filenames = filenames_dictionary()
 
+# Run the model k times for all vaccination orders specified
 for vacc_order in vaccination_orders:
     results = model(parameters, filenames, vacc_order, timesteps)
     file_name1 = str(file_names[vacc_order]) + "_" + str(0) + ".csv"
