@@ -23,5 +23,5 @@ The results will be placed in the results directory. These can be visualized wit
 To plot graphs of the results you can use the show plots.py script. Put in the names of the files to be shown and run the script.
 It will open to html pages with graphs. It should look something like the picture below.
 
-![This is an image](https://github.com/Casperbkkr/Agerank/blob/Final/Screenshot%202022-01-12%20at%2016.47.07.png?raw=true)
+![This is an image](https://github.com/Casperbkkr/Agerank/blob/Final/Example.png?raw=true)
 
