@@ -11,7 +11,7 @@ from Parameters import parameter
 # Timesteps to simulate the model for
 timesteps = 400
 # The amount of times the same model has to be run
-k = 20
+k = 10
 # The type of order for the vaccination, choose from dictionary below.
 vaccination_orders = [1, 2, 3]
 

@@ -13,6 +13,9 @@ def read_age_distribution(age_dist_file: str, csv_or_txt: str = "txt") -> pd.Dat
     which is used as a check for completeness of the file.
 
     The function returns a list with the population for each age.
+    :param age_dist_file: filename
+    :param csv_or_txt: choose whether it is a .csv or .txt file
+    :return: dataframe containing the age distribution
     """
 
     # Read in population per year of the Netherlands on January 1, 2020
@@ -40,11 +43,10 @@ def read_fatality_distribution(fatality_distribution_file: str, number_of_ages: 
     https://doi.org/10.1007/s10654-020-00698-1
 
     The function returns a dictionary with the IFR for each age as its value and age as key.
+    :param fatality_distribution_file: filename
+    :param number_of_ages: number of ages present in the population to be modelled
+    :return: list with the Infection Fatality rate
     """
-
-    # Read in fatality per age group
-
-    # print(' Source: Levin et al. (2020)\n')
     start_of_age_group = []
     rate = []
     with open(fatality_distribution_file, 'r') as infile:
@@ -66,6 +68,13 @@ def read_fatality_distribution(fatality_distribution_file: str, number_of_ages: 
 
 
 def make_age_groups(dataframe: pd.DataFrame, inp: list, number_of_ages: int) -> list:
+    """
+    Creates the age groups present in the network.
+    :param dataframe: dataframe with data needed to create the age groups
+    :param inp: the number of age groups in the population
+    :param number_of_ages: number of ages in the population
+    :return: lsit with age groups
+    """
     out = []
     number_of_age_groups = len(inp)
     for i in range(0, number_of_age_groups - 1):
@@ -90,8 +99,11 @@ def read_contact_data(dataframe: pd.DataFrame, participants_file: str, contacts_
     - both physical and nonphysical contact of > 15 minutes duration
     - only if all data of a particpant were complete
 
-    Input: ngroups = number of age groups
-           group = array of group indices for the ages
+           :param dataframe: dataframe containing data about the population
+           :param participants_file: filename
+           :param contacts_file: filename
+           :param PERIOD: frequency of meeting
+           :return: matrix with the contact data
     """
 
     nages = len(dataframe.index)  # number of ages
@@ -162,14 +174,14 @@ def read_contact_data(dataframe: pd.DataFrame, participants_file: str, contacts_
     return degree
 
 
-def determine_age_distribution(parameters: dict, dataframe: pd.DataFrame):
-    '''
+def determine_age_distribution(parameters: dict, dataframe: pd.DataFrame) -> list:
+    """
     determine age distribution for persons in network to be created
-    :param parameters:
-    :param dataframe:
     This function returns a list with the amount of people of a certain age in the network.
-    '''
-
+    :param parameters: parameters needed to create the network
+    :param dataframe: dataframe with all read in data so far
+    :return: list with start of people of that age if L is the list then L[10]-L[9] is the number of people of age 10]
+    """
     start_age = np.zeros((len(dataframe.index)), dtype=int)
     total = sum(dataframe["Number of people"])
     partial_sum = 0  # partial sum
@@ -177,13 +189,15 @@ def determine_age_distribution(parameters: dict, dataframe: pd.DataFrame):
         fraction = partial_sum / total
         start_age[k] = math.floor(fraction * parameters["N"])
         partial_sum += dataframe["Number of people"][k]  # psum = number of persons aged <= k
+
     return start_age
 
 
 def read_makeup_households(file: str) -> pd.DataFrame:
     """
-
-    :rtype: object
+    Reads data about the makeup of households
+    :param file: filename
+    :return: dataframe with data about the make up of households
     """
     makeup_data = pd.read_csv(file)
     makeup_data["One parent household"] = (
@@ -197,6 +211,11 @@ def read_makeup_households(file: str) -> pd.DataFrame:
 
 
 def read_child_distribution(file: str) -> pd.DataFrame:
+    """
+    Reads data about how children are distributed among family sizes.
+    :param file: filename
+    :return: dataframe with distribution of children
+    """
     child_data = pd.read_csv(file)
     child_data["Tweeouderhuishoudens"] = child_data["Tweeouderhuishoudens gehuwd"] + child_data[
         "Tweeouderhuishoudens ongehuwd"]

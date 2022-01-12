@@ -24,8 +24,6 @@ def couple_childless(house_dict: dict, people_dict: dict, amount_people: object,
     people_dict = dictionary with key age and value people not in a house of that age
     amount_people = dataframe with the number of people of a certain age living in a couple.
     household_id = value that gives every household a key id for easier identification
-
-
     """
 
     couples = list(amount_people["Fraction couple without children"])
@@ -55,9 +53,8 @@ def couple_childless(house_dict: dict, people_dict: dict, amount_people: object,
 def how_many_children(available_children: list) -> int:
     """
     This function chooses 1,2 or 3 children depending on whether there are still that many children available
-
-    input:
-    available_children = list with the amount of household with that many children left to be created.
+    :param available_children: list with the amount of household with that many children left to be placed
+    :return: a random number chosesn from that list
     """
 
     dict = {}
@@ -74,7 +71,12 @@ def make_households(N: int, file1: str, file2: str, file3: str, people_dict: dic
     This function creates all the households in the simulation. It first calculates how many of each type there should be.
     It then proceeds to create these. It uses demographical data as input.
     input:
-
+    :param N: Size of network
+    :param file1: filename
+    :param file2: filename
+    :param file3: filename
+    :param people_dict: dictionary with key age and value all people objects of that age
+    :return: dictionary with household objects. Key is size and value list of household objects
     """
     makeup_data = read_makeup_households(file1)
     houses = calculate_houses(N, makeup_data)
@@ -268,6 +270,15 @@ def create_people(N: int, dataframe: pd.DataFrame, vaccination_readiness: float)
 
 
 def create_subnetwork(group1: age_group_class, group2: age_group_class, degree: float, i0: int, j0: int) -> list:
+    """
+    This function links two age groups to the degree given by the Polymod study.
+    :param group1: age group object
+    :param group2: age group object
+    :param degree: number of connections needed to be made between the two age groups
+    :param i0: offset in main matrix
+    :param j0: offset in main matrix
+    :return: sparse matrix list with all connections between the two age groups
+    """
     n = group1.size_group()
     m = group2.size_group()
     # determine whether the block is a diagonal block,
@@ -339,16 +350,14 @@ def create_network(dataframe: pd.DataFrame, people: list, contact_data: np.ndarr
     where vertex i has a number of contacts determined
     by the degree matrix d.
 
-    ngroups = number of age groups represented in the network
-    size[g] = size of age group g in the network, i.e. the number
-              of persons in the age group. The sum of all sizes is n.
-    d[gi][gj] = average degree of a vertex in age group gi, considering
-                only connections to age group gj.
-
     This is a fast method, linear in the number of edges |E|,
     so it can be used to create large networks.
     a is stored as a list of pairs (i,j), sorted by rows, and within
     each row by column index.
+    :param dataframe: pandas dataframe containing data needed to create the network
+    :param people: list of people objects
+    :param contact_data: matrix M with degree of connectednes between age groups. M_{i,j} is average degree between age group i and age group j
+    :return: sparse matrix list with all connections between the two age groups
     """
     ngroups = dataframe['Age group class object'].nunique()
     Groepen = dataframe['Age group class object'].unique()
@@ -376,7 +385,12 @@ def create_network(dataframe: pd.DataFrame, people: list, contact_data: np.ndarr
 
 
 def read_households(N: int, household_file: str) -> pd.DataFrame:
-    # Read the file containing data about the make up of household demographics
+    """
+     Read the file containing data about the make up of household demographics
+    :param N: number of people in the network to be simulated
+    :param household_file: filename
+    :return: pandas dataframe with data about households
+    """
     household_data = pd.read_csv(household_file)
     household_data = household_data.fillna(0)  # replace missing data with zero values
     household_data = household_data.drop([0, 97, 98, 99, 100])  # remove extra data
@@ -399,6 +413,12 @@ def read_households(N: int, household_file: str) -> pd.DataFrame:
 
 
 def calculate_household(N: int, dataframe: pd.DataFrame) -> [pd.DataFrame, int, int]:
+    """
+    Calculate how many households of what type are present in the network.
+    :param N: number of people in the network to be modelled
+    :param dataframe: pandas dataframe containing data about households.
+    :return: how many households of what type are present in the network.
+    """
     # calculate fractions of population
     total = read_age_distribution('Datafiles/CBS_NL_population_20200101.txt').sum()[0]
     total_child_or_couple = round(N * dataframe.sum().sum() / total)
@@ -429,6 +449,12 @@ def calculate_household(N: int, dataframe: pd.DataFrame) -> [pd.DataFrame, int, 
 
 
 def calculate_houses(N: int, dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculates the number of houses in the network needed for this size network according to demographic data
+    :param N: number of people in the network to be modelled
+    :param dataframe: pandas dataframe with data bout households
+    :return: dataframe with  the number of houses of certain sizes present in the network
+    """
     out = pd.DataFrame()
     makeup_data_list = dataframe.values[0][:-1]
 

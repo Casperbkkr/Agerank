@@ -2,7 +2,7 @@ import pandas as pd
 
 class track_statistics(object):
     """This Class is used to track how many people are in a certain state at time t"""
-    def __init__(self, tracker_id=1):
+    def __init__(self, tracker_id: int = 1):
         self.tracker_id = tracker_id
         self.data = pd.DataFrame(columns=["susceptible",
                                           "total infected",
@@ -15,13 +15,13 @@ class track_statistics(object):
                                           "transmitter",
                                           "deceased"])
 
-    def update_statistics(self, tracker_changes):
+    def update_statistics(self, tracker_changes: dict):
         # This method is used to safe the numbers for a new timestep
         # it takes a dataframe with the new numbers a input and appends it
         self.data.index.name = "timestep"
         self.data = self.data.append(tracker_changes, ignore_index=True)
 
-    def init_empty_changes(self):
+    def init_empty_changes(self) -> dict:
         # returns an empty dictionary for tracking the next step
         dictionary = {"susceptible": 0,
                       "total infected": 0,
@@ -35,7 +35,7 @@ class track_statistics(object):
                       "deceased": 0}
         return dictionary
 
-    def empty_changes(self):
+    def empty_changes(self) -> dict:
         #returns the numbers form the previous timestep so that they can be updated
         dictionary = {"susceptible": self.data["susceptible"].iloc[-1],
                       "total infected": self.data["total infected"].iloc[-1],
@@ -53,14 +53,14 @@ class track_statistics(object):
         # saves the statistics to csv file. Takes a file name as input.
         self.data.to_csv(filename)
 
-    def read_data(self, filename):
+    def read_data(self, filename: str) -> pd.DataFrame:
         # reads data from csv. Usefull for loading old statistics.
         # input is a filename
         return pd.read_csv(filename)
 
 
 class person(object):
-    """The person class object. Has properties needed to kee"""
+    """The person class object"""
     def __init__(self, person_id, age, status=0, vaccination_readiness=True, days_since_infection=0):
         self.person_id = person_id  # corresponds to the index within the adjacency matrix
         self.age = age  # age of the person
@@ -79,7 +79,7 @@ class person(object):
 
 
     def update_household(self, household: object):
-        #used for placing people into a houshold.
+        # used for placing people into a houshold.
         # takes a household class object as input
         self.household = household
 
@@ -113,6 +113,7 @@ class group_class(object):
 
 
 class household_class(group_class):
+
     def __init__(self, household_id: int, number_of_members: int):
         self.number_of_members = number_of_members
         super().__init__(household_id)

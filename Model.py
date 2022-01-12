@@ -29,9 +29,14 @@ def initialise_infection(parameters: dict, people: list, tracker_changes: dict) 
 
 
 def initialise_vaccination(parameters: dict, order: list, tracker_changes: dict) -> [dict, list]:
+    """
+    :param parameters:
+    :param order: list with order of vaccination containing people objects.
+    :param tracker_changes:
+    :return: tracker changes, list with people still to be vaccinated
+    """
     # Initializes a fraction of the population with a vaccination
-    # input:
-    # returns
+
     new_status_changes = tracker_changes
 
     # vaccinate a fraction VACC0 of the population
@@ -49,7 +54,14 @@ def initialise_vaccination(parameters: dict, order: list, tracker_changes: dict)
     return new_status_changes, order
 
 
-def vaccination_order_function(parameters: dict, people: list, age_groups, type: int) -> list:
+def vaccination_order_function(parameters: dict, people: list, age_groups: pd.Series, type: int) -> list:
+    """
+    :param parameters:
+    :param people:
+    :param age_groups: series with start of ages in population people id's
+    :param type: vaccination type
+    :return:
+    """
     # This is a function that creates a list of people to vaccinate to follow in the model
     if type == 1:  # Old to young
         people = people[age_groups.iloc[parameters["STARTAGE"]]:]
@@ -100,6 +112,14 @@ def vaccination_order_function(parameters: dict, people: list, age_groups, type:
 
 def initialize_model(parameters: dict, files: dict, order_type: int, tracker_changes: dict) \
         -> [object, list, dict, list, list, dict, dict]:
+    """
+
+    :param parameters:
+    :param files: dict with all filenames to be used for the model can be altered in datasets.py
+    :param order_type: The vaccination order. given bby an integer
+    :param tracker_changes:
+    :return: same as input
+    """
     # This initializes everything for the model to run
 
     # Read age distribution and add to dataframe
@@ -162,8 +182,13 @@ def initialize_model(parameters: dict, files: dict, order_type: int, tracker_cha
 
 
 def infect_cohabitants(parameters: dict, people: list, tracker_changes: dict) -> dict:
+    """
+    :param parameters: all parameters of the model
+    :param people: list of people
+    :param tracker_changes:  dictionary with stat changes
+    :return: dictionary with stat changes
+    """
     # Method of infection for people in the same house.
-    # todo needs to made faster with a sparse matrix instead of looking up everyones household. Also for further work.
 
     infected = []
 
@@ -196,7 +221,13 @@ def infect_cohabitants(parameters: dict, people: list, tracker_changes: dict) ->
 
 
 def infect_perturbation(parameters: dict, people: list, tracker_changes: dict) -> dict:
-    # this infects a fraction of the poplulation proportional to the the amount of infections
+    """
+    This infects a fraction of the poplulation proportional to the the amount of infections
+    :param parameters:
+    :param people: list of people objects
+    :param tracker_changes:
+    :return:
+    """
     n = len(people)
     x = np.zeros((n + 1), dtype=int)
 
@@ -233,6 +264,11 @@ def infect_standard(parameters: dict, network: list, people: list, tracker_chang
     status represents the health status of the persons.
     In this step, infectious persons infect their susceptible contacts
     with a certain probability.
+    :param parameters: dict with all parameters of the model
+    :param network: list with sparse matrix containing all polymod links in the model
+    :param people: list of people objects
+    :param tracker_changes:
+    :return: tracker changes
     """
     n = len(people)
     x = np.zeros((n + 1), dtype=int)
@@ -274,12 +310,15 @@ def infect_standard(parameters: dict, network: list, people: list, tracker_chang
     return tracker_changes
 
 
-def update(parameters: dict, fatality: float, people: list, status_changes: dict) -> dict:
+def update(parameters: dict, fatality: pd.Series, people: list, status_changes: dict) -> dict:
     """This function updates the status and increments the number
     of days that a person has been infected.
     For a new infection, days[i]=1.  For uninfected persons, days[i]=0.
-    Input: infection fatality rate and age of persons i
-    Return: status_changes: a dictionary containing the numbers all tracked properties
+    :param parameters: all parameters needer to run the model
+    :param fatality: pandas series containing IFR for all ages.
+    :param people: list of people objects
+    :param status_changes: a dictionary containing the numbers all tracked properties
+    :return: a dictionary containing the numbers all tracked properties
     """
     new_status_changes = status_changes
     for person in people:
@@ -342,6 +381,11 @@ def vaccinate(parameters: dict, people: list, status_changes: dict, order: list)
     """This function performs one time step (day) of the vaccinations.
     status represents the health status of the persons.
     Only the susceptible or recovered (after a number of days) are vaccinated
+    :param parameters: all parameters needed to run the model
+    :param people: list of people objects
+    :param status_changes:
+    :param order: ordered list with people to be vaccinated in order.
+    :return: status changes.
     """
 
     new_status_changes = status_changes
@@ -367,7 +411,19 @@ def vaccinate(parameters: dict, people: list, status_changes: dict, order: list)
 def run_model(parameters: dict, data: object, people: list, households: dict, contact_matrix: list, order: list,
               tracker: dict, timesteps: int,
               start_vaccination: int = 0) -> dict:
-    # Function for running the model. It wraps the vaccinate, infection and update functions
+    """
+    Function for running the model. It wraps the vaccinate, infection and update functions
+    :param parameters: all parameters needed to run the model
+    :param data: Pandas dataframe containing all data needed to dun the model.
+    :param people: list of people objects
+    :param households: dict of household objects
+    :param contact_matrix: sparse matrix list with all connections made in the Polymod network
+    :param order: list with Vaccination order
+    :param tracker: Keeps track of changes in tracked properties
+    :param timesteps: number of steps to simulate
+    :param start_vaccination: When to start vaccinating people
+    :return: tracker
+    """
     for time in range(timesteps):
         sys.stdout.write('\r' + "Tijdstap: " + str(time))
         sys.stdout.flush()
@@ -393,8 +449,15 @@ def run_model(parameters: dict, data: object, people: list, households: dict, co
 
 
 def model(parameters: dict, filenames: dict, type: int, timesteps: int = 400) -> dict:
-    # this initializes and runs the entire model for a certain number of timesteps.
-    # It returns a pandas dataframe containing all data.
+    """
+    this initializes and runs the entire model for a certain number of timesteps.
+    :param parameters: all parameters needed to run the model in dictionary format
+    :param filenames: dictionary with filenames needed to run the model
+    :param type: vaccination order type given by an integer number 1,2, or 3
+    :param timesteps: number of timesteps to simulate
+    :return: all statistics tracked during the simultion
+    """
+
 
     #initialize an empty tracker
     tracker = track_statistics()
