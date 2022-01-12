@@ -6,7 +6,7 @@ from Datasets import filenames_dictionary
 from Model import model
 from Parameters import parameter
 
-#  This code can be used for collecting data.
+#  This code can be used for running the model.
 
 # Timesteps to simulate the model for
 timesteps = 400
