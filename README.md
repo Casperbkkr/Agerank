@@ -23,5 +23,5 @@ The results will be placed in the results directory. These can be visualized wit
 To plot graphs of the results you can use the show plots.py script. Put in the names of the files to be shown and run the script.
 It will open to html pages with graphs. It should
 
-![This is an image](https://myoctocat.com/assets/images/base-octocat.svg)
+![This is an image](https://github.com/Casperbkkr/Agerank/blob/Final/bokeh_plot-13.png)
 
